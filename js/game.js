@@ -1,15 +1,18 @@
 "use strict";
 
+
 /*
 =========================================================
- LUDO GAME ENGINE
+ LUDO
+ Phase 1
+ Game engine + UI
  Vanilla JavaScript
 =========================================================
 */
 
 
 /* =====================================================
-   PLAYER CONFIGURATION
+   PLAYER CONFIG
 ===================================================== */
 
 const PLAYERS = [
@@ -46,12 +49,7 @@ const PLAYERS = [
 
 
 /* =====================================================
-   52 CELL OUTER TRACK
-
-   Coordinates use:
-   [row, column]
-
-   Board is 15 x 15.
+   STANDARD 52-CELL TRACK
 ===================================================== */
 
 const TRACK = [
@@ -125,8 +123,6 @@ const TRACK = [
 
 /* =====================================================
    HOME LANES
-
-   Five cells before center.
 ===================================================== */
 
 const HOME_LANES = {
@@ -167,9 +163,7 @@ const HOME_LANES = {
 
 
 /* =====================================================
-   YARD TOKEN POSITIONS
-
-   Four token locations for each player.
+   YARD POSITIONS
 ===================================================== */
 
 const YARDS = {
@@ -207,11 +201,10 @@ const YARDS = {
 
 /* =====================================================
    SAFE CELLS
-
-   Standard Ludo safe positions.
 ===================================================== */
 
 const SAFE_CELLS = new Set([
+
     0,
     8,
     13,
@@ -220,21 +213,27 @@ const SAFE_CELLS = new Set([
     34,
     39,
     47
+
 ]);
 
 
 /* =====================================================
-   GAME STATE
+   TOKEN POSITION MODEL
 
-   token.position:
+   -1  = yard
 
-   -1 = yard
+    0  = player's starting track cell
 
-    0...51 = outer track
+    1..51 = outer track
 
-    52...56 = home lane
+   52..56 = home lane
 
     57 = finished
+===================================================== */
+
+
+/* =====================================================
+   GAME STATE
 ===================================================== */
 
 let game = {
@@ -245,41 +244,401 @@ let game = {
 
     waitingForToken: false,
 
+    moving: false,
+
     gameOver: false,
 
-    players: PLAYERS.map(player => ({
+    players: createPlayers()
+
+};
+
+
+/* =====================================================
+   SETTINGS
+===================================================== */
+
+let settings = {
+
+    theme: "light",
+
+    board: "classic",
+
+    sound: true,
+
+    compact: false
+
+};
+
+
+/* =====================================================
+   CREATE PLAYERS
+===================================================== */
+
+function createPlayers() {
+
+    return PLAYERS.map(player => ({
 
         ...player,
 
         tokens: [
+
             { position: -1 },
             { position: -1 },
             { position: -1 },
             { position: -1 }
+
         ]
 
-    }))
+    }));
 
-};
+}
 
 
 /* =====================================================
    DOM
 ===================================================== */
 
-const board = document.getElementById("board");
-const tokenLayer = document.getElementById("tokenLayer");
+const board =
+    document.getElementById("board");
 
-const diceButton = document.getElementById("diceBtn");
-const diceText = document.getElementById("diceText");
-const diceHint = document.getElementById("diceHint");
+const tokenLayer =
+    document.getElementById("tokenLayer");
 
-const turnText = document.getElementById("turnText");
-const turnIndicator = document.getElementById("turnIndicator");
+const diceButton =
+    document.getElementById("diceBtn");
 
-const message = document.getElementById("message");
+const diceButtonDesktop =
+    document.getElementById("diceBtnDesktop");
 
-const newGameButton = document.getElementById("newGameBtn");
+const diceText =
+    document.getElementById("diceText");
+
+const diceTextDesktop =
+    document.getElementById("diceTextDesktop");
+
+const diceHint =
+    document.getElementById("diceHint");
+
+const diceHintDesktop =
+    document.getElementById("diceHintDesktop");
+
+const diceAttention =
+    document.getElementById("diceAttention");
+
+const diceAttentionDesktop =
+    document.getElementById(
+        "diceAttentionDesktop"
+    );
+
+const turnText =
+    document.getElementById("turnText");
+
+const turnIndicator =
+    document.getElementById(
+        "turnIndicator"
+    );
+
+const mobileMessage =
+    document.getElementById(
+        "mobileMessage"
+    );
+
+const desktopMessage =
+    document.getElementById(
+        "desktopMessage"
+    );
+
+const newGameButton =
+    document.getElementById(
+        "newGameBtn"
+    );
+
+const optionsButton =
+    document.getElementById(
+        "optionsBtn"
+    );
+
+const optionsMenu =
+    document.getElementById(
+        "optionsMenu"
+    );
+
+const closeOptionsButton =
+    document.getElementById(
+        "closeOptionsBtn"
+    );
+
+const boardStyleSelect =
+    document.getElementById(
+        "boardStyleSelect"
+    );
+
+const soundToggle =
+    document.getElementById(
+        "soundToggle"
+    );
+
+const compactToggle =
+    document.getElementById(
+        "compactToggle"
+    );
+
+
+/* =====================================================
+   LOCAL STORAGE
+===================================================== */
+
+const SETTINGS_KEY =
+    "ludo_phase1_settings";
+
+
+function loadSettings() {
+
+    try {
+
+        const saved =
+            localStorage.getItem(
+                SETTINGS_KEY
+            );
+
+        if (saved) {
+
+            settings = {
+                ...settings,
+                ...JSON.parse(saved)
+            };
+
+        }
+
+    } catch (error) {
+
+        console.warn(
+            "Could not load settings.",
+            error
+        );
+
+    }
+
+    applySettings();
+
+}
+
+
+function saveSettings() {
+
+    try {
+
+        localStorage.setItem(
+            SETTINGS_KEY,
+            JSON.stringify(settings)
+        );
+
+    } catch (error) {
+
+        console.warn(
+            "Could not save settings.",
+            error
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   APPLY SETTINGS
+===================================================== */
+
+function applySettings() {
+
+    document.body.dataset.theme =
+        settings.theme;
+
+    document.body.dataset.board =
+        settings.board;
+
+    document.body.classList.toggle(
+        "compact",
+        settings.compact
+    );
+
+    if (boardStyleSelect) {
+
+        boardStyleSelect.value =
+            settings.board;
+
+    }
+
+    soundToggle.classList.toggle(
+        "active",
+        settings.sound
+    );
+
+    compactToggle.classList.toggle(
+        "active",
+        settings.compact
+    );
+
+
+    document
+        .querySelectorAll(".theme-choice")
+        .forEach(button => {
+
+            button.classList.toggle(
+                "active",
+                button.dataset.theme ===
+                settings.theme
+            );
+
+        });
+
+}
+
+
+/* =====================================================
+   THEME EVENTS
+===================================================== */
+
+document
+    .querySelectorAll(".theme-choice")
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                settings.theme =
+                    button.dataset.theme;
+
+                applySettings();
+
+                saveSettings();
+
+            }
+        );
+
+    });
+
+
+boardStyleSelect.addEventListener(
+    "change",
+    () => {
+
+        settings.board =
+            boardStyleSelect.value;
+
+        applySettings();
+
+        saveSettings();
+
+    }
+);
+
+
+soundToggle.addEventListener(
+    "click",
+    () => {
+
+        settings.sound =
+            !settings.sound;
+
+        applySettings();
+
+        saveSettings();
+
+    }
+);
+
+
+compactToggle.addEventListener(
+    "click",
+    () => {
+
+        settings.compact =
+            !settings.compact;
+
+        applySettings();
+
+        saveSettings();
+
+    }
+);
+
+
+/* =====================================================
+   OPTIONS
+===================================================== */
+
+function openOptions() {
+
+    optionsMenu.classList.add("open");
+
+    optionsMenu.setAttribute(
+        "aria-hidden",
+        "false"
+    );
+
+}
+
+
+function closeOptions() {
+
+    optionsMenu.classList.remove("open");
+
+    optionsMenu.setAttribute(
+        "aria-hidden",
+        "true"
+    );
+
+}
+
+
+optionsButton.addEventListener(
+    "click",
+    () => {
+
+        if (
+            optionsMenu.classList.contains(
+                "open"
+            )
+        ) {
+
+            closeOptions();
+
+        } else {
+
+            openOptions();
+
+        }
+
+    }
+);
+
+
+closeOptionsButton.addEventListener(
+    "click",
+    closeOptions
+);
+
+
+document.addEventListener(
+    "click",
+    event => {
+
+        if (
+            optionsMenu.classList.contains(
+                "open"
+            ) &&
+            !optionsMenu.contains(event.target) &&
+            !optionsButton.contains(event.target)
+        ) {
+
+            closeOptions();
+
+        }
+
+    }
+);
 
 
 /* =====================================================
@@ -290,43 +649,68 @@ function createBoard() {
 
     board.innerHTML = "";
 
-    for (let row = 0; row < 15; row++) {
+    for (
+        let row = 0;
+        row < 15;
+        row++
+    ) {
 
-        for (let col = 0; col < 15; col++) {
+        for (
+            let col = 0;
+            col < 15;
+            col++
+        ) {
 
-            const cell = document.createElement("div");
+            const cell =
+                document.createElement("div");
 
             cell.className = "cell";
 
             cell.dataset.row = row;
             cell.dataset.col = col;
 
-            const trackIndex = TRACK.findIndex(
-                ([r, c]) => r === row && c === col
-            );
 
             /*
-            Main track
+            Outer track.
             */
+
+            const trackIndex =
+                TRACK.findIndex(
+                    ([r, c]) =>
+                        r === row &&
+                        c === col
+                );
+
 
             if (trackIndex !== -1) {
 
                 cell.classList.add("path");
 
-                if (SAFE_CELLS.has(trackIndex)) {
-                    cell.classList.add("safe");
+                if (
+                    SAFE_CELLS.has(trackIndex)
+                ) {
+
+                    cell.classList.add(
+                        "safe"
+                    );
+
                 }
 
             }
 
 
             /*
-            Yards
+            Red yard.
             */
 
-            if (row <= 5 && col <= 5) {
+            if (
+                row <= 5 &&
+                col <= 5
+            ) {
 
-                cell.classList.add("yard-red");
+                cell.classList.add(
+                    "yard-red"
+                );
 
                 if (
                     row >= 1 &&
@@ -334,15 +718,28 @@ function createBoard() {
                     col >= 1 &&
                     col <= 4
                 ) {
-                    cell.classList.add("yard-inner-red");
+
+                    cell.classList.add(
+                        "yard-inner-red"
+                    );
+
                 }
 
             }
 
 
-            if (row <= 5 && col >= 9) {
+            /*
+            Green yard.
+            */
 
-                cell.classList.add("yard-green");
+            if (
+                row <= 5 &&
+                col >= 9
+            ) {
+
+                cell.classList.add(
+                    "yard-green"
+                );
 
                 if (
                     row >= 1 &&
@@ -350,15 +747,28 @@ function createBoard() {
                     col >= 10 &&
                     col <= 13
                 ) {
-                    cell.classList.add("yard-inner-green");
+
+                    cell.classList.add(
+                        "yard-inner-green"
+                    );
+
                 }
 
             }
 
 
-            if (row >= 9 && col <= 5) {
+            /*
+            Yellow yard.
+            */
 
-                cell.classList.add("yard-yellow");
+            if (
+                row >= 9 &&
+                col <= 5
+            ) {
+
+                cell.classList.add(
+                    "yard-yellow"
+                );
 
                 if (
                     row >= 10 &&
@@ -366,15 +776,28 @@ function createBoard() {
                     col >= 1 &&
                     col <= 4
                 ) {
-                    cell.classList.add("yard-inner-yellow");
+
+                    cell.classList.add(
+                        "yard-inner-yellow"
+                    );
+
                 }
 
             }
 
 
-            if (row >= 9 && col >= 9) {
+            /*
+            Blue yard.
+            */
 
-                cell.classList.add("yard-blue");
+            if (
+                row >= 9 &&
+                col >= 9
+            ) {
+
+                cell.classList.add(
+                    "yard-blue"
+                );
 
                 if (
                     row >= 10 &&
@@ -382,59 +805,79 @@ function createBoard() {
                     col >= 10 &&
                     col <= 13
                 ) {
-                    cell.classList.add("yard-inner-blue");
+
+                    cell.classList.add(
+                        "yard-inner-blue"
+                    );
+
                 }
 
             }
 
 
             /*
-            Home lanes
+            Home lanes.
             */
 
-            for (const player of PLAYERS) {
+            PLAYERS.forEach(
+                player => {
 
-                const lane = HOME_LANES[player.id];
+                    const lane =
+                        HOME_LANES[
+                            player.id
+                        ];
 
-                if (
-                    lane.some(
-                        ([r, c]) =>
-                            r === row &&
-                            c === col
-                    )
-                ) {
+                    if (
+                        lane.some(
+                            ([r, c]) =>
+                                r === row &&
+                                c === col
+                        )
+                    ) {
 
-                    cell.classList.add(`lane-${player.id}`);
+                        cell.classList.add(
+                            `lane-${player.id}`
+                        );
+
+                    }
 
                 }
-
-            }
+            );
 
 
             /*
-            Starting cells
+            Starting cells.
             */
 
-            for (const player of PLAYERS) {
+            PLAYERS.forEach(
+                player => {
 
-                const start = TRACK[player.start];
+                    const start =
+                        TRACK[
+                            player.start
+                        ];
 
-                if (
-                    start[0] === row &&
-                    start[1] === col
-                ) {
+                    if (
+                        start[0] === row &&
+                        start[1] === col
+                    ) {
 
-                    cell.classList.add(`start-${player.id}`);
+                        cell.classList.add(
+                            `start-${player.id}`
+                        );
 
-                    cell.classList.remove("safe");
+                        cell.classList.remove(
+                            "safe"
+                        );
+
+                    }
 
                 }
-
-            }
+            );
 
 
             /*
-            Center
+            Center.
             */
 
             if (
@@ -444,7 +887,9 @@ function createBoard() {
                 col <= 8
             ) {
 
-                cell.classList.add("center-cell");
+                cell.classList.add(
+                    "center-cell"
+                );
 
             }
 
@@ -459,42 +904,77 @@ function createBoard() {
 
 
 /* =====================================================
-   TOKEN ELEMENT CREATION
+   TOKEN ELEMENTS
 ===================================================== */
 
 function createTokens() {
 
     tokenLayer.innerHTML = "";
 
-    game.players.forEach((player, playerIndex) => {
+    game.players.forEach(
+        (player, playerIndex) => {
 
-        player.tokens.forEach((token, tokenIndex) => {
+            player.tokens.forEach(
+                (token, tokenIndex) => {
 
-            const element = document.createElement("div");
+                    const element =
+                        document.createElement(
+                            "div"
+                        );
 
-            element.className = `token ${player.id}`;
+                    element.className =
+                        `token ${player.id}`;
 
-            element.dataset.player = playerIndex;
-            element.dataset.token = tokenIndex;
+                    element.dataset.player =
+                        playerIndex;
 
-            element.addEventListener("click", () => {
+                    element.dataset.token =
+                        tokenIndex;
 
-                if (
-                    playerIndex !== game.currentPlayer ||
-                    !game.waitingForToken
-                ) {
-                    return;
+
+                    element.addEventListener(
+                        "click",
+                        () => {
+
+                            if (
+                                game.moving ||
+                                game.gameOver
+                            ) {
+                                return;
+                            }
+
+                            if (
+                                playerIndex !==
+                                game.currentPlayer
+                            ) {
+                                return;
+                            }
+
+                            if (
+                                !game.waitingForToken
+                            ) {
+                                return;
+                            }
+
+                            selectToken(
+                                playerIndex,
+                                tokenIndex
+                            );
+
+                        }
+                    );
+
+
+                    tokenLayer.appendChild(
+                        element
+                    );
+
                 }
+            );
 
-                selectToken(playerIndex, tokenIndex);
+        }
+    );
 
-            });
-
-            tokenLayer.appendChild(element);
-
-        });
-
-    });
 
     renderTokens();
 
@@ -502,16 +982,27 @@ function createTokens() {
 
 
 /* =====================================================
-   GET GLOBAL TRACK POSITION
+   GLOBAL TRACK POSITION
 ===================================================== */
 
-function getGlobalTrackPosition(player, position) {
+function getGlobalTrackPosition(
+    player,
+    relativePosition
+) {
 
-    if (position < 0 || position > 51) {
+    if (
+        relativePosition < 0 ||
+        relativePosition > 51
+    ) {
+
         return null;
+
     }
 
-    return (player.start + position) % 52;
+    return (
+        player.start +
+        relativePosition
+    ) % 52;
 
 }
 
@@ -520,34 +1011,63 @@ function getGlobalTrackPosition(player, position) {
    TOKEN COORDINATES
 ===================================================== */
 
-function getTokenCoordinates(player, tokenIndex) {
+function getTokenCoordinates(
+    player,
+    tokenIndex
+) {
 
-    const token = player.tokens[tokenIndex];
+    const token =
+        player.tokens[tokenIndex];
+
 
     /*
-    Token still in yard.
+    Yard.
     */
 
-    if (token.position === -1) {
+    if (
+        token.position === -1
+    ) {
 
-        return YARDS[player.id][tokenIndex];
+        return YARDS[
+            player.id
+        ][tokenIndex];
 
     }
 
 
     /*
-    Token finished.
+    Finished.
+
+    Place finished tokens around
+    the center rather than exactly
+    on top of one another.
     */
 
-    if (token.position === 57) {
+    if (
+        token.position === 57
+    ) {
 
-        return [7.5, 7.5];
+        const finished =
+            player.tokens.filter(
+                t =>
+                    t.position === 57
+            ).length;
+
+        const offset =
+            (tokenIndex -
+                Math.max(0, finished - 1)
+            ) * 0.45;
+
+        return [
+            7.5 + offset,
+            7.5
+        ];
 
     }
 
 
     /*
-    Main track.
+    Outer track.
     */
 
     if (
@@ -561,12 +1081,17 @@ function getTokenCoordinates(player, tokenIndex) {
                 token.position
             );
 
-        const [row, col] =
-            TRACK[globalPosition];
+        const [
+            row,
+            col
+        ] =
+            TRACK[
+                globalPosition
+            ];
 
         return [
-            row + 0.5,
-            col + 0.5
+            row + .5,
+            col + .5
         ];
 
     }
@@ -582,22 +1107,31 @@ function getTokenCoordinates(player, tokenIndex) {
     ) {
 
         const lane =
-            HOME_LANES[player.id];
+            HOME_LANES[
+                player.id
+            ];
 
         const index =
             token.position - 52;
 
-        const [row, col] =
+        const [
+            row,
+            col
+        ] =
             lane[index];
 
         return [
-            row + 0.5,
-            col + 0.5
+            row + .5,
+            col + .5
         ];
 
     }
 
-    return [7.5, 7.5];
+
+    return [
+        7.5,
+        7.5
+    ];
 
 }
 
@@ -609,76 +1143,115 @@ function getTokenCoordinates(player, tokenIndex) {
 function renderTokens() {
 
     const elements =
-        tokenLayer.querySelectorAll(".token");
+        tokenLayer.querySelectorAll(
+            ".token"
+        );
+
 
     elements.forEach(element => {
 
         const playerIndex =
-            Number(element.dataset.player);
+            Number(
+                element.dataset.player
+            );
 
         const tokenIndex =
-            Number(element.dataset.token);
+            Number(
+                element.dataset.token
+            );
 
         const player =
-            game.players[playerIndex];
+            game.players[
+                playerIndex
+            ];
 
-        const token =
-            player.tokens[tokenIndex];
-
-        const [row, col] =
+        const [
+            row,
+            col
+        ] =
             getTokenCoordinates(
                 player,
                 tokenIndex
             );
 
-        element.style.top =
-            `${(row / 15) * 100}%`;
 
         element.style.left =
             `${(col / 15) * 100}%`;
 
-        element.classList.remove("movable");
+        element.style.top =
+            `${(row / 15) * 100}%`;
 
-        if (token.position === 57) {
-            element.classList.add("finished");
-        } else {
-            element.classList.remove("finished");
+
+        element.classList.remove(
+            "movable"
+        );
+
+
+        if (
+            playerIndex ===
+            game.currentPlayer &&
+            game.waitingForToken &&
+            game.dice !== null &&
+            canMoveToken(
+                player,
+                player.tokens[tokenIndex],
+                game.dice
+            )
+        ) {
+
+            element.classList.add(
+                "movable"
+            );
+
         }
 
     });
-
-    highlightMovableTokens();
 
 }
 
 
 /* =====================================================
-   MOVEMENT RULES
+   TOKEN MOVEMENT RULE
 ===================================================== */
 
-function canMoveToken(player, token, dice) {
+function canMoveToken(
+    player,
+    token,
+    dice
+) {
 
-    if (!dice) {
+    if (
+        dice === null ||
+        dice === undefined
+    ) {
+
         return false;
+
     }
 
 
     /*
-    Finished token cannot move.
+    Finished.
     */
 
-    if (token.position === 57) {
+    if (
+        token.position === 57
+    ) {
+
         return false;
+
     }
 
 
     /*
-    Token in yard.
+    Yard.
 
-    Must roll 6.
+    Six is required.
     */
 
-    if (token.position === -1) {
+    if (
+        token.position === -1
+    ) {
 
         return dice === 6;
 
@@ -686,7 +1259,10 @@ function canMoveToken(player, token, dice) {
 
 
     /*
-    Token on track.
+    Outer track.
+
+    Position 51 is followed by
+    home-lane position 52.
     */
 
     if (
@@ -694,35 +1270,16 @@ function canMoveToken(player, token, dice) {
         token.position <= 51
     ) {
 
-        const newPosition =
-            token.position + dice;
-
-        /*
-        Maximum progress:
-
-        52 -> first home lane
-
-        56 -> final lane
-
-        57 -> home
-        */
-
-        if (newPosition <= 51) {
-            return true;
-        }
-
-        /*
-        Number of spaces required to enter
-        and reach home.
-        */
-
-        return newPosition <= 56;
+        return (
+            token.position +
+            dice
+        ) <= 56;
 
     }
 
 
     /*
-    Already inside home lane.
+    Home lane.
     */
 
     if (
@@ -730,9 +1287,13 @@ function canMoveToken(player, token, dice) {
         token.position <= 56
     ) {
 
-        return token.position + dice <= 57;
+        return (
+            token.position +
+            dice
+        ) <= 57;
 
     }
+
 
     return false;
 
@@ -743,12 +1304,18 @@ function canMoveToken(player, token, dice) {
    MOVABLE TOKENS
 ===================================================== */
 
-function getMovableTokens(playerIndex, dice) {
+function getMovableTokens(
+    playerIndex,
+    dice
+) {
 
     const player =
-        game.players[playerIndex];
+        game.players[
+            playerIndex
+        ];
 
     const result = [];
+
 
     player.tokens.forEach(
         (token, index) => {
@@ -768,48 +1335,14 @@ function getMovableTokens(playerIndex, dice) {
         }
     );
 
+
     return result;
 
 }
 
 
 /* =====================================================
-   HIGHLIGHT MOVABLE TOKENS
-===================================================== */
-
-function highlightMovableTokens() {
-
-    if (
-        !game.waitingForToken ||
-        game.dice === null
-    ) {
-        return;
-    }
-
-    const movable =
-        getMovableTokens(
-            game.currentPlayer,
-            game.dice
-        );
-
-    movable.forEach(tokenIndex => {
-
-        const element =
-            tokenLayer.querySelector(
-                `.token[data-player="${game.currentPlayer}"][data-token="${tokenIndex}"]`
-            );
-
-        if (element) {
-            element.classList.add("movable");
-        }
-
-    });
-
-}
-
-
-/* =====================================================
-   MOVE TOKEN
+   SELECT TOKEN
 ===================================================== */
 
 async function selectToken(
@@ -817,58 +1350,69 @@ async function selectToken(
     tokenIndex
 ) {
 
-    if (game.gameOver) {
+    if (
+        game.gameOver ||
+        game.moving
+    ) {
+
         return;
+
     }
 
     if (
         playerIndex !==
         game.currentPlayer
     ) {
+
         return;
+
     }
-
-    if (!game.waitingForToken) {
-        return;
-    }
-
-    const player =
-        game.players[playerIndex];
-
-    const token =
-        player.tokens[tokenIndex];
 
     if (
-        !canMoveToken(
-            player,
-            token,
-            game.dice
-        )
+        !game.waitingForToken
     ) {
+
         return;
+
     }
 
+
+    const player =
+        game.players[
+            playerIndex
+        ];
+
+    const token =
+        player.tokens[
+            tokenIndex
+        ];
 
     const dice =
         game.dice;
 
 
-    /*
-    Stop selection.
-    */
+    if (
+        !canMoveToken(
+            player,
+            token,
+            dice
+        )
+    ) {
+
+        return;
+
+    }
+
 
     game.waitingForToken = false;
 
-
-    /*
-    Clear highlighting.
-    */
+    game.moving = true;
 
     renderTokens();
 
 
     /*
-    Move token.
+    Move.
     */
 
     await moveToken(
@@ -890,20 +1434,27 @@ async function selectToken(
 
 
     /*
-    Check winner.
+    Winner.
     */
 
     if (
         checkWinner(playerIndex)
     ) {
+
+        game.moving = false;
+
         return;
+
     }
 
 
+    game.moving = false;
+
+
     /*
-    Extra turn:
-    - rolled six
-    - captured opponent
+    Extra turn.
+
+    Six or capture.
     */
 
     if (
@@ -926,17 +1477,13 @@ async function selectToken(
     }
 
 
-    /*
-    Next player.
-    */
-
     nextPlayer();
 
 }
 
 
 /* =====================================================
-   MOVE TOKEN ANIMATION
+   MOVE TOKEN
 ===================================================== */
 
 function moveToken(
@@ -945,102 +1492,138 @@ function moveToken(
     dice
 ) {
 
-    return new Promise(resolve => {
+    return new Promise(
+        resolve => {
 
-        const player =
-            game.players[playerIndex];
+            const player =
+                game.players[
+                    playerIndex
+                ];
 
-        const token =
-            player.tokens[tokenIndex];
-
-
-        /*
-        Leaving yard.
-        */
-
-        if (token.position === -1) {
-
-            token.position = 0;
-
-            renderTokens();
-
-            setTimeout(
-                resolve,
-                300
-            );
-
-            return;
-
-        }
+            const token =
+                player.tokens[
+                    tokenIndex
+                ];
 
 
-        /*
-        Normal movement.
+            /*
+            Leaving yard.
 
-        Animate one square at a time.
-        */
+            Token starts on its player's
+            starting cell.
+            */
 
-        let steps = dice;
+            if (
+                token.position === -1
+            ) {
 
-
-        const interval =
-            setInterval(() => {
-
-                if (token.position <= 51) {
-
-                    token.position++;
-
-                    if (token.position === 52) {
-                        token.position = 52;
-                    }
-
-                } else {
-
-                    token.position++;
-
-                }
-
-
-                /*
-                Position 52 is the first
-                home-lane position.
-
-                After 51 on the track,
-                continue into lane.
-                */
+                token.position = 0;
 
                 renderTokens();
 
-                steps--;
+                playMoveSound();
 
-                if (steps <= 0) {
+                setTimeout(
+                    resolve,
+                    240
+                );
 
-                    clearInterval(interval);
+                return;
 
-                    /*
-                    Reaching home.
-                    */
+            }
 
-                    if (
-                        token.position === 57
-                    ) {
 
-                        token.position = 57;
+            /*
+            Move one logical step
+            at a time.
+            */
 
-                    }
+            let steps = dice;
 
-                    renderTokens();
 
-                    setTimeout(
-                        resolve,
-                        200
-                    );
+            const interval =
+                setInterval(
+                    () => {
 
-                }
+                        /*
+                        Outer track.
+                        */
 
-            }, 130);
+                        if (
+                            token.position <= 51
+                        ) {
 
-    });
+                            token.position++;
+
+                        }
+
+
+                        /*
+                        Home lane is
+                        automatically entered
+                        after track position 51.
+                        */
+
+                        else if (
+                            token.position >= 52 &&
+                            token.position <= 56
+                        ) {
+
+                            token.position++;
+
+                        }
+
+
+                        if (
+                            token.position > 57
+                        ) {
+
+                            token.position =
+                                57;
+
+                        }
+
+
+                        renderTokens();
+
+                        playMoveSound();
+
+                        steps--;
+
+
+                        if (
+                            steps <= 0
+                        ) {
+
+                            clearInterval(
+                                interval
+                            );
+
+
+                            if (
+                                token.position === 57
+                            ) {
+
+                                playHomeSound();
+
+                            }
+
+
+                            renderTokens();
+
+                            setTimeout(
+                                resolve,
+                                180
+                            );
+
+                        }
+
+                    },
+                    125
+                );
+
+        }
+    );
 
 }
 
@@ -1055,22 +1638,27 @@ function captureOpponents(
 ) {
 
     const player =
-        game.players[playerIndex];
+        game.players[
+            playerIndex
+        ];
 
     const token =
-        player.tokens[tokenIndex];
+        player.tokens[
+            tokenIndex
+        ];
 
 
     /*
-    Only tokens on outer track
-    can capture.
+    Only outer track can capture.
     */
 
     if (
         token.position < 0 ||
         token.position > 51
     ) {
+
         return false;
+
     }
 
 
@@ -1082,7 +1670,7 @@ function captureOpponents(
 
 
     /*
-    Safe cell cannot capture.
+    Safe.
     */
 
     if (
@@ -1090,7 +1678,9 @@ function captureOpponents(
             globalPosition
         )
     ) {
+
         return false;
+
     }
 
 
@@ -1104,8 +1694,11 @@ function captureOpponents(
                 opponentIndex ===
                 playerIndex
             ) {
+
                 return;
+
             }
+
 
             opponent.tokens.forEach(
                 opponentToken => {
@@ -1116,7 +1709,9 @@ function captureOpponents(
                         opponentToken.position >
                         51
                     ) {
+
                         return;
+
                     }
 
 
@@ -1132,7 +1727,8 @@ function captureOpponents(
                         globalPosition
                     ) {
 
-                        opponentToken.position = -1;
+                        opponentToken.position =
+                            -1;
 
                         captured = true;
 
@@ -1146,7 +1742,11 @@ function captureOpponents(
 
 
     if (captured) {
+
+        playCaptureSound();
+
         renderTokens();
+
     }
 
 
@@ -1159,10 +1759,15 @@ function captureOpponents(
    WINNER
 ===================================================== */
 
-function checkWinner(playerIndex) {
+function checkWinner(
+    playerIndex
+) {
 
     const player =
-        game.players[playerIndex];
+        game.players[
+            playerIndex
+        ];
+
 
     const finished =
         player.tokens.filter(
@@ -1174,7 +1779,9 @@ function checkWinner(playerIndex) {
     updateScores();
 
 
-    if (finished === 4) {
+    if (
+        finished === 4
+    ) {
 
         game.gameOver = true;
 
@@ -1185,6 +1792,7 @@ function checkWinner(playerIndex) {
         return true;
 
     }
+
 
     return false;
 
@@ -1201,16 +1809,24 @@ function nextPlayer() {
 
     game.waitingForToken = false;
 
+    game.moving = false;
+
+
     game.currentPlayer =
-        (game.currentPlayer + 1) %
+        (
+            game.currentPlayer + 1
+        ) %
         game.players.length;
 
+
     updateUI();
+
 
     const player =
         game.players[
             game.currentPlayer
         ];
+
 
     setMessage(
         `${player.name}'s turn. Roll the dice.`
@@ -1225,64 +1841,97 @@ function nextPlayer() {
 
 function rollDice() {
 
-    if (game.gameOver) {
+    if (
+        game.gameOver ||
+        game.moving ||
+        game.waitingForToken ||
+        game.dice !== null
+    ) {
+
         return;
+
     }
 
-    if (game.waitingForToken) {
-        return;
-    }
 
-    if (game.dice !== null) {
-        return;
-    }
+    diceButton.classList.add(
+        "rolling"
+    );
 
+    diceButtonDesktop.classList.add(
+        "rolling"
+    );
 
-    diceButton.classList.add("rolling");
 
     diceButton.disabled = true;
 
+    diceButtonDesktop.disabled = true;
+
 
     /*
-    Temporary rolling animation.
+    Small visual randomization.
     */
 
     let count = 0;
 
+
     const animation =
-        setInterval(() => {
+        setInterval(
+            () => {
 
-            const random =
-                Math.floor(
-                    Math.random() * 6
-                ) + 1;
-
-            drawDice(random);
-
-            count++;
-
-            if (count >= 7) {
-
-                clearInterval(animation);
-
-                const result =
+                const random =
                     Math.floor(
                         Math.random() * 6
                     ) + 1;
 
-                game.dice = result;
+                drawDice(random);
 
-                diceButton.classList.remove(
-                    "rolling"
-                );
+                count++;
 
-                diceButton.disabled = false;
 
-                handleDiceResult();
+                if (
+                    count >= 7
+                ) {
 
-            }
+                    clearInterval(
+                        animation
+                    );
 
-        }, 75);
+
+                    const result =
+                        Math.floor(
+                            Math.random() * 6
+                        ) + 1;
+
+
+                    game.dice =
+                        result;
+
+
+                    diceButton.classList.remove(
+                        "rolling"
+                    );
+
+                    diceButtonDesktop.classList.remove(
+                        "rolling"
+                    );
+
+
+                    diceButton.disabled =
+                        false;
+
+                    diceButtonDesktop.disabled =
+                        false;
+
+
+                    playDiceSound();
+
+                    handleDiceResult();
+
+                }
+
+            },
+            75
+        );
 
 }
 
@@ -1301,7 +1950,9 @@ function handleDiceResult() {
     const dice =
         game.dice;
 
+
     drawDice(dice);
+
 
     const movable =
         getMovableTokens(
@@ -1314,44 +1965,53 @@ function handleDiceResult() {
     No legal move.
     */
 
-    if (movable.length === 0) {
+    if (
+        movable.length === 0
+    ) {
 
         game.waitingForToken = false;
+
 
         setMessage(
             `${player.name} cannot make a move.`
         );
 
-        diceHint.textContent =
-            "No legal moves";
+
+        updateUI();
 
 
         /*
-        A six still gives another turn.
+        Six means another roll.
         */
 
-        if (dice === 6) {
+        if (
+            dice === 6
+        ) {
 
-            setTimeout(() => {
+            setTimeout(
+                () => {
 
-                game.dice = null;
+                    game.dice = null;
 
-                updateUI();
+                    updateUI();
 
-                setMessage(
-                    `${player.name} rolled a 6. Roll again.`
-                );
+                    setMessage(
+                        `${player.name} rolled a 6. Roll again.`
+                    );
 
-            }, 900);
+                },
+                850
+            );
 
         } else {
 
             setTimeout(
                 nextPlayer,
-                900
+                850
             );
 
         }
+
 
         return;
 
@@ -1359,17 +2019,19 @@ function handleDiceResult() {
 
 
     /*
-    Legal move exists.
+    Legal move.
     */
 
     game.waitingForToken = true;
 
+
     updateUI();
+
 
     setMessage(
         movable.length === 1
             ? "Select the highlighted token."
-            : "Choose a token to move."
+            : "Choose a highlighted token."
     );
 
 }
@@ -1381,40 +2043,102 @@ function handleDiceResult() {
 
 function drawDice(number) {
 
-    const dots =
-        diceButton.querySelectorAll(
-            ".dot"
-        );
+    const buttons = [
+        diceButton,
+        diceButtonDesktop
+    ];
+
 
     const patterns = {
 
         1: [4],
 
-        2: [0, 8],
+        2: [
+            0,
+            8
+        ],
 
-        3: [0, 4, 8],
+        3: [
+            0,
+            4,
+            8
+        ],
 
-        4: [0, 2, 6, 8],
+        4: [
+            0,
+            2,
+            6,
+            8
+        ],
 
-        5: [0, 2, 4, 6, 8],
+        5: [
+            0,
+            2,
+            4,
+            6,
+            8
+        ],
 
-        6: [0, 2, 3, 5, 6, 8]
+        6: [
+            0,
+            2,
+            3,
+            5,
+            6,
+            8
+        ]
 
     };
 
 
-    dots.forEach(dot => {
+    buttons.forEach(
+        button => {
 
-        dot.style.opacity = "0";
+            if (!button) {
+                return;
+            }
 
-    });
+
+            const dots =
+                button.querySelectorAll(
+                    ".dot"
+                );
 
 
-    patterns[number].forEach(index => {
+            dots.forEach(
+                dot => {
 
-        dots[index].style.opacity = "1";
+                    dot.style.opacity = "0";
 
-    });
+                }
+            );
+
+
+            if (
+                patterns[number]
+            ) {
+
+                patterns[number]
+                    .forEach(
+                        index => {
+
+                            if (
+                                dots[index]
+                            ) {
+
+                                dots[index]
+                                    .style
+                                    .opacity = "1";
+
+                            }
+
+                        }
+                    );
+
+            }
+
+        }
+    );
 
 }
 
@@ -1440,14 +2164,14 @@ function updateUI() {
 
 
     /*
-    Turn color.
+    Turn indicator.
     */
 
     turnIndicator.style.background =
         player.color;
 
     turnIndicator.style.boxShadow =
-        `0 0 0 7px ${player.color}22`;
+        `0 0 0 6px ${player.color}22`;
 
 
     /*
@@ -1467,11 +2191,13 @@ function updateUI() {
                     `${p.id}-status`
                 );
 
+
             panel.classList.toggle(
                 "active",
                 index ===
                 game.currentPlayer
             );
+
 
             if (
                 index ===
@@ -1481,7 +2207,9 @@ function updateUI() {
                 status.textContent =
                     game.waitingForToken
                         ? "Choose token"
-                        : "Your turn";
+                        : game.moving
+                            ? "Moving..."
+                            : "Your turn";
 
             } else {
 
@@ -1495,25 +2223,41 @@ function updateUI() {
 
 
     /*
-    Dice button.
+    Dice state.
     */
 
-    diceButton.disabled =
+    const diceDisabled =
         game.gameOver ||
         game.waitingForToken ||
+        game.moving ||
         game.dice !== null;
 
 
+    diceButton.disabled =
+        diceDisabled;
+
+    diceButtonDesktop.disabled =
+        diceDisabled;
+
+
     /*
-    Dice labels.
+    Dice text.
     */
 
-    if (game.dice === null) {
+    if (
+        game.dice === null
+    ) {
 
         diceText.textContent =
             "Roll Dice";
 
+        diceTextDesktop.textContent =
+            "Roll Dice";
+
         diceHint.textContent =
+            "Your turn";
+
+        diceHintDesktop.textContent =
             "Your turn";
 
     } else {
@@ -1521,7 +2265,15 @@ function updateUI() {
         diceText.textContent =
             `Rolled ${game.dice}`;
 
+        diceTextDesktop.textContent =
+            `Rolled ${game.dice}`;
+
         diceHint.textContent =
+            game.waitingForToken
+                ? "Choose a token"
+                : "Processing";
+
+        diceHintDesktop.textContent =
             game.waitingForToken
                 ? "Choose a token"
                 : "Processing";
@@ -1529,9 +2281,61 @@ function updateUI() {
     }
 
 
+    /*
+    Dice attention.
+
+    Hide when user needs to choose
+    a token or dice isn't available.
+    */
+
+    const showAttention =
+        game.dice === null &&
+        !game.waitingForToken &&
+        !game.moving &&
+        !game.gameOver;
+
+
+    diceAttention.style.display =
+        showAttention
+            ? "block"
+            : "none";
+
+    diceAttentionDesktop.style.display =
+        showAttention
+            ? "block"
+            : "none";
+
+
+    /*
+    Active player controls
+    */
+
+    updatePlayerColor(
+        player.color
+    );
+
+
+    /*
+    Render.
+    */
+
     renderTokens();
 
     updateScores();
+
+}
+
+
+/* =====================================================
+   UPDATE ACTIVE PLAYER COLOR
+===================================================== */
+
+function updatePlayerColor(color) {
+
+    document.documentElement.style.setProperty(
+        "--current-player-color",
+        color
+    );
 
 }
 
@@ -1542,23 +2346,27 @@ function updateUI() {
 
 function updateScores() {
 
-    game.players.forEach(player => {
+    game.players.forEach(
+        player => {
 
-        const score =
-            player.tokens.filter(
-                token =>
-                    token.position === 57
-            ).length;
+            const score =
+                player.tokens.filter(
+                    token =>
+                        token.position === 57
+                ).length;
 
-        const element =
-            document.getElementById(
-                `${player.id}-score`
-            );
 
-        element.textContent =
-            score;
+            const element =
+                document.getElementById(
+                    `${player.id}-score`
+                );
 
-    });
+
+            element.textContent =
+                score;
+
+        }
+    );
 
 }
 
@@ -1569,22 +2377,29 @@ function updateScores() {
 
 function setMessage(text) {
 
-    message.textContent = text;
+    mobileMessage.textContent =
+        text;
+
+    desktopMessage.textContent =
+        text;
 
 }
 
 
 /* =====================================================
-   WINNER MODAL
+   WINNER
 ===================================================== */
 
 function showWinner(player) {
 
     const overlay =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
     overlay.className =
         "winner-overlay";
+
 
     overlay.innerHTML = `
 
@@ -1599,11 +2414,14 @@ function showWinner(player) {
             </h2>
 
             <p>
-                Congratulations! All four tokens
-                reached home.
+                All four tokens reached home.
+                Congratulations!
             </p>
 
-            <button id="playAgainBtn">
+            <button
+                id="playAgainBtn"
+                type="button"
+            >
                 Play Again
             </button>
 
@@ -1618,7 +2436,9 @@ function showWinner(player) {
 
 
     document
-        .getElementById("playAgainBtn")
+        .getElementById(
+            "playAgainBtn"
+        )
         .addEventListener(
             "click",
             () => {
@@ -1630,6 +2450,9 @@ function showWinner(player) {
             }
         );
 
+
+    playWinSound();
+
 }
 
 
@@ -1639,6 +2462,20 @@ function showWinner(player) {
 
 function newGame() {
 
+    /*
+    Remove old winner modal.
+    */
+
+    document
+        .querySelectorAll(
+            ".winner-overlay"
+        )
+        .forEach(
+            element =>
+                element.remove()
+        );
+
+
     game = {
 
         currentPlayer: 0,
@@ -1647,20 +2484,11 @@ function newGame() {
 
         waitingForToken: false,
 
+        moving: false,
+
         gameOver: false,
 
-        players: PLAYERS.map(player => ({
-
-            ...player,
-
-            tokens: [
-                { position: -1 },
-                { position: -1 },
-                { position: -1 },
-                { position: -1 }
-            ]
-
-        }))
+        players: createPlayers()
 
     };
 
@@ -1671,9 +2499,222 @@ function newGame() {
         "Roll the dice to start."
     );
 
+
     createTokens();
 
     updateUI();
+
+}
+
+
+/* =====================================================
+   SIMPLE SOUND SYSTEM
+   Uses Web Audio only.
+
+   No external sound files.
+===================================================== */
+
+let audioContext = null;
+
+
+function getAudioContext() {
+
+    if (
+        !settings.sound
+    ) {
+
+        return null;
+
+    }
+
+
+    if (!audioContext) {
+
+        try {
+
+            audioContext =
+                new (
+                    window.AudioContext ||
+                    window.webkitAudioContext
+                )();
+
+        } catch {
+
+            return null;
+
+        }
+
+    }
+
+
+    if (
+        audioContext.state ===
+        "suspended"
+    ) {
+
+        audioContext.resume();
+
+    }
+
+
+    return audioContext;
+
+}
+
+
+function playTone(
+    frequency,
+    duration,
+    volume = .035,
+    type = "sine"
+) {
+
+    const ctx =
+        getAudioContext();
+
+    if (!ctx) {
+        return;
+    }
+
+
+    const oscillator =
+        ctx.createOscillator();
+
+    const gain =
+        ctx.createGain();
+
+
+    oscillator.type =
+        type;
+
+    oscillator.frequency.value =
+        frequency;
+
+
+    gain.gain.setValueAtTime(
+        volume,
+        ctx.currentTime
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        .001,
+        ctx.currentTime +
+        duration
+    );
+
+
+    oscillator.connect(gain);
+
+    gain.connect(
+        ctx.destination
+    );
+
+
+    oscillator.start();
+
+    oscillator.stop(
+        ctx.currentTime +
+        duration
+    );
+
+}
+
+
+function playDiceSound() {
+
+    playTone(
+        360,
+        .06,
+        .035,
+        "square"
+    );
+
+}
+
+
+function playMoveSound() {
+
+    if (
+        Math.random() > .45
+    ) {
+
+        return;
+
+    }
+
+    playTone(
+        280,
+        .035,
+        .018
+    );
+
+}
+
+
+function playCaptureSound() {
+
+    playTone(
+        190,
+        .09,
+        .04,
+        "triangle"
+    );
+
+}
+
+
+function playHomeSound() {
+
+    setTimeout(
+        () => {
+
+            playTone(
+                520,
+                .09,
+                .04
+            );
+
+        },
+        20
+    );
+
+    setTimeout(
+        () => {
+
+            playTone(
+                720,
+                .12,
+                .04
+            );
+
+        },
+        110
+    );
+
+}
+
+
+function playWinSound() {
+
+    [520, 650, 780]
+        .forEach(
+            (frequency, index) => {
+
+                setTimeout(
+                    () => {
+
+                        playTone(
+                            frequency,
+                            .16,
+                            .045
+                        );
+
+                    },
+                    index * 130
+                );
+
+            }
+        );
 
 }
 
@@ -1687,6 +2728,13 @@ diceButton.addEventListener(
     rollDice
 );
 
+
+diceButtonDesktop.addEventListener(
+    "click",
+    rollDice
+);
+
+
 newGameButton.addEventListener(
     "click",
     newGame
@@ -1694,8 +2742,10 @@ newGameButton.addEventListener(
 
 
 /* =====================================================
-   START GAME
+   INITIALIZE
 ===================================================== */
+
+loadSettings();
 
 createBoard();
 
