@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Ludo</title>
+    <meta name="description" content="Modern online Ludo game">
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- Header -->
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-icon">🎲</div>
+            <div>
+                <h1>Ludo</h1>
+                <span>Classic • Modern • Fun</span>
+            </div>
+        </div>
+
+        <button id="newGameBtn" class="new-game-btn">
+            ↻ New Game
+        </button>
+    </header>
+
+
+    <!-- Main -->
+    <main class="game-layout">
+
+        <!-- Left Player -->
+        <aside class="player-panel red-panel" id="panel-red">
+            <div class="player-color red"></div>
+
+            <div class="player-info">
+                <strong>Red</strong>
+                <span id="red-status">Waiting</span>
+            </div>
+
+            <div class="player-score">
+                <b id="red-score">0</b>
+                <small>HOME</small>
+            </div>
+        </aside>
+
+
+        <!-- Game -->
+        <section class="game-area">
+
+            <div class="game-header">
+
+                <div>
+                    <span class="eyebrow">CURRENT TURN</span>
+                    <h2 id="turnText">Red's turn</h2>
+                </div>
+
+                <div class="turn-indicator" id="turnIndicator"></div>
+
+            </div>
+
+
+            <!-- Board -->
+            <div class="board-wrap">
+
+                <div id="board" class="board"></div>
+
+                <div id="tokenLayer" class="token-layer"></div>
+
+            </div>
+
+
+            <!-- Dice -->
+            <div class="controls">
+
+                <div class="dice-area">
+
+                    <button id="diceBtn" class="dice-button" aria-label="Roll dice">
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                    </button>
+
+                    <div class="dice-label">
+                        <span id="diceText">Roll Dice</span>
+                        <small id="diceHint">Your turn</small>
+                    </div>
+
+                </div>
+
+                <div id="message" class="game-message">
+                    Roll the dice to start.
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- Right Player -->
+        <aside class="players-right">
+
+            <div class="player-panel green-panel" id="panel-green">
+                <div class="player-color green"></div>
+
+                <div class="player-info">
+                    <strong>Green</strong>
+                    <span id="green-status">Waiting</span>
+                </div>
+
+                <div class="player-score">
+                    <b id="green-score">0</b>
+                    <small>HOME</small>
+                </div>
+            </div>
+
+
+            <div class="player-panel yellow-panel" id="panel-yellow">
+                <div class="player-color yellow"></div>
+
+                <div class="player-info">
+                    <strong>Yellow</strong>
+                    <span id="yellow-status">Waiting</span>
+                </div>
+
+                <div class="player-score">
+                    <b id="yellow-score">0</b>
+                    <small>HOME</small>
+                </div>
+            </div>
+
+
+            <div class="player-panel blue-panel" id="panel-blue">
+                <div class="player-color blue"></div>
+
+                <div class="player-info">
+                    <strong>Blue</strong>
+                    <span id="blue-status">Waiting</span>
+                </div>
+
+                <div class="player-score">
+                    <b id="blue-score">0</b>
+                    <small>HOME</small>
+                </div>
+            </div>
+
+        </aside>
+
+    </main>
+
+
+    <!-- Rules -->
+    <section class="rules">
+
+        <div>
+            <span>🎲</span>
+            <strong>Roll a 6</strong>
+            <p>to bring a token onto the board.</p>
+        </div>
+
+        <div>
+            <span>⭐</span>
+            <strong>Safe Cells</strong>
+            <p>Tokens cannot be captured here.</p>
+        </div>
+
+        <div>
+            <span>🏆</span>
+            <strong>Reach Home</strong>
+            <p>Get all four tokens home to win.</p>
+        </div>
+
+    </section>
+
+</div>
+
+<script src="js/game.js"></script>
+
+</body>
+</html>
