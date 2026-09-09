@@ -2,683 +2,431 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1, viewport-fit=cover"
-    >
-
-    <meta
-        name="description"
-        content="A modern classic offline Ludo game built with vanilla JavaScript."
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
     <meta name="theme-color" content="#111827">
+    <meta name="description" content="A modern classic offline Ludo game.">
 
     <title>Ludo — Classic Offline Game</title>
 
     <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body data-theme="midnight">
+<body data-theme="midnight" data-board-follow="false">
 
 <div class="app">
 
-    <!-- =========================================================
-         HEADER
-    ========================================================== -->
-
+    <!-- HEADER -->
     <header class="topbar">
+        <div class="topbar-inner">
 
-        <div class="brand">
+            <div class="brand">
+                <div class="brand-mark">L</div>
 
-            <div class="brand-mark">L</div>
-
-            <div class="brand-text">
-                <h1>Ludo</h1>
-                <p>Classic • Offline • Free & Open Source</p>
-            </div>
-
-        </div>
-
-        <button
-            id="settingsButton"
-            class="settings-button"
-            type="button"
-            aria-expanded="false"
-        >
-            <span class="settings-icon">⚙</span>
-            <span>Settings</span>
-        </button>
-
-
-        <!-- SETTINGS -->
-
-        <div
-            id="settingsMenu"
-            class="settings-menu"
-            aria-hidden="true"
-        >
-
-            <div class="settings-title">
-                <strong>Game Settings</strong>
-                <span>Customize your game</span>
-            </div>
-
-
-            <div class="setting-group">
-
-                <label>Theme</label>
-
-                <div class="theme-buttons">
-
-                    <button
-                        class="theme-choice"
-                        data-theme-choice="light"
-                        type="button"
-                    >
-                        ☀ Light
-                    </button>
-
-                    <button
-                        class="theme-choice"
-                        data-theme-choice="midnight"
-                        type="button"
-                    >
-                        ◐ Midnight
-                    </button>
-
+                <div class="brand-text">
+                    <h1>Ludo</h1>
+                    <p>Classic • Offline • Free & Open Source</p>
                 </div>
-
             </div>
-
-
-            <div class="setting-row">
-
-                <div>
-                    <strong>Board follows theme</strong>
-                    <small>
-                        Match the board with the selected theme
-                    </small>
-                </div>
-
-                <label class="switch">
-
-                    <input
-                        id="boardThemeToggle"
-                        type="checkbox"
-                        checked
-                    >
-
-                    <span class="slider"></span>
-
-                </label>
-
-            </div>
-
-
-            <div class="settings-divider"></div>
-
 
             <button
-                id="restartButton"
-                class="restart-button"
+                id="settingsButton"
+                class="settings-button"
                 type="button"
-            >
-                <span>↻</span>
-                New / Restart Game
+                aria-expanded="false">
+                ⚙ Settings
             </button>
 
-        </div>
+            <div id="settingsMenu" class="settings-menu">
 
+                <div class="settings-title">
+                    Settings
+                </div>
+
+                <div class="settings-section">
+                    <span class="settings-label">Theme</span>
+
+                    <div class="theme-buttons">
+                        <button
+                            class="theme-button"
+                            data-theme-choice="light"
+                            type="button">
+                            ☀ Light
+                        </button>
+
+                        <button
+                            class="theme-button"
+                            data-theme-choice="midnight"
+                            type="button">
+                            ● Midnight
+                        </button>
+                    </div>
+                </div>
+
+                <div class="settings-section board-theme-section">
+
+                    <div class="setting-row">
+                        <div>
+                            <strong>Board follows theme</strong>
+                            <small id="boardThemeHint">
+                                Available in Midnight theme
+                            </small>
+                        </div>
+
+                        <label class="switch">
+                            <input
+                                id="boardThemeToggle"
+                                type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                </div>
+
+                <div class="settings-section">
+
+                    <button
+                        id="restartButton"
+                        class="restart-button"
+                        type="button">
+                        ↻ New / Restart Game
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
     </header>
 
 
-    <!-- =========================================================
-         GAME AREA
-    ========================================================== -->
+    <!-- MAIN GAME -->
+    <main class="page">
 
-    <main class="game-layout">
-
-
-        <!-- =====================================================
-             LEFT SIDE
-        ====================================================== -->
-
-        <section class="game-main">
+        <!-- BOARD + SIDE INFORMATION -->
+        <section class="game-layout">
 
             <!-- BOARD -->
-
-            <section class="board-section">
+            <div class="board-column">
 
                 <div class="board-frame">
 
                     <div
                         id="board"
                         class="board"
-                        aria-label="Ludo game board"
-                    >
+                        aria-label="Ludo game board">
+
+                        <div
+                            id="boardGrid"
+                            class="board-grid">
+                        </div>
+
 
                         <!-- RED HOME -->
-
                         <div class="home-area home-red">
 
-                            <div class="home-title">
-                                RED
-                            </div>
-
-                            <div class="yard">
-
-                                <div
-                                    class="yard-slot"
-                                    data-yard="red-0"
-                                ></div>
-
-                                <div
-                                    class="yard-slot"
-                                    data-yard="red-1"
-                                ></div>
-
-                                <div
-                                    class="yard-slot"
-                                    data-yard="red-2"
-                                ></div>
-
-                                <div
-                                    class="yard-slot"
-                                    data-yard="red-3"
-                                ></div>
-
-                            </div>
+                            <div class="yard-slot slot-1"></div>
+                            <div class="yard-slot slot-2"></div>
+                            <div class="yard-slot slot-3"></div>
+                            <div class="yard-slot slot-4"></div>
 
                         </div>
 
 
                         <!-- GREEN HOME -->
-
                         <div class="home-area home-green">
 
-                            <div class="home-title">
-                                GREEN
-                            </div>
-
-                            <div class="yard">
-
-                                <div
-                                    class="yard-slot"
-                                    data-yard="green-0"
-                                ></div>
-
-                                <div
-                                    class="yard-slot"
-                                    data-yard="green-1"
-                                ></div>
-
-                                <div
-                                    class="yard-slot"
-                                    data-yard="green-2"
-                                ></div>
-
-                                <div
-                                    class="yard-slot"
-                                    data-yard="green-3"
-                                ></div>
-
-                            </div>
+                            <div class="yard-slot slot-1"></div>
+                            <div class="yard-slot slot-2"></div>
+                            <div class="yard-slot slot-3"></div>
+                            <div class="yard-slot slot-4"></div>
 
                         </div>
 
 
                         <!-- YELLOW HOME -->
-
                         <div class="home-area home-yellow">
 
-                            <div class="home-title">
-                                YELLOW
-                            </div>
-
-                            <div class="yard">
-
-                                <div
-                                    class="yard-slot"
-                                    data-yard="yellow-0"
-                                ></div>
-
-                                <div
-                                    class="yard-slot"
-                                    data-yard="yellow-1"
-                                ></div>
-
-                                <div
-                                    class="yard-slot"
-                                    data-yard="yellow-2"
-                                ></div>
-
-                                <div
-                                    class="yard-slot"
-                                    data-yard="yellow-3"
-                                ></div>
-
-                            </div>
+                            <div class="yard-slot slot-1"></div>
+                            <div class="yard-slot slot-2"></div>
+                            <div class="yard-slot slot-3"></div>
+                            <div class="yard-slot slot-4"></div>
 
                         </div>
 
 
                         <!-- BLUE HOME -->
-
                         <div class="home-area home-blue">
 
-                            <div class="home-title">
-                                BLUE
-                            </div>
-
-                            <div class="yard">
-
-                                <div
-                                    class="yard-slot"
-                                    data-yard="blue-0"
-                                ></div>
-
-                                <div
-                                    class="yard-slot"
-                                    data-yard="blue-1"
-                                ></div>
-
-                                <div
-                                    class="yard-slot"
-                                    data-yard="blue-2"
-                                ></div>
-
-                                <div
-                                    class="yard-slot"
-                                    data-yard="blue-3"
-                                ></div>
-
-                            </div>
+                            <div class="yard-slot slot-1"></div>
+                            <div class="yard-slot slot-2"></div>
+                            <div class="yard-slot slot-3"></div>
+                            <div class="yard-slot slot-4"></div>
 
                         </div>
-
-
-                        <!-- BOARD GRID -->
-
-                        <div
-                            id="boardGrid"
-                            class="board-grid"
-                        ></div>
 
 
                         <!-- CENTER -->
-
                         <div class="home-center">
 
                             <div class="center-triangle red"></div>
-
                             <div class="center-triangle green"></div>
-
                             <div class="center-triangle yellow"></div>
-
                             <div class="center-triangle blue"></div>
 
                             <div class="center-core">
-                                <span>🏆</span>
+                                <span>★</span>
                             </div>
 
                         </div>
 
 
-                        <!-- TOKENS -->
-
+                        <!-- PAWNS -->
                         <div
                             id="tokenLayer"
-                            class="token-layer"
-                        ></div>
+                            class="token-layer">
+                        </div>
 
                     </div>
 
                 </div>
 
-            </section>
 
+                <!-- BELOW BOARD -->
+                <div class="board-bottom-layout">
 
-            <!-- DESKTOP INFO BELOW BOARD -->
+                    <!-- YOUR MOVE -->
+                    <section
+                        id="diceCard"
+                        class="game-card dice-card">
 
-            <div class="below-board-info">
+                        <div class="card-eyebrow">
+                            YOUR MOVE
+                        </div>
 
-                <!-- HOW TO PLAY -->
+                        <div
+                            id="dicePointer"
+                            class="dice-pointer">
+                            ↓
+                        </div>
 
-                <section class="info-card">
+                        <button
+                            id="diceButton"
+                            class="dice-button"
+                            type="button"
+                            aria-label="Roll dice">
 
-                    <div class="info-icon">?</div>
+                            <div
+                                id="diceFace"
+                                class="dice-face face-1">
 
-                    <div class="info-content">
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
 
-                        <span class="eyebrow">
-                            HOW TO PLAY
-                        </span>
-
-                        <h2>
-                            Move • Capture • Finish
-                        </h2>
-
-                        <p>
-                            Roll the dice and move one of your
-                            four pawns. Roll a
-                            <strong>6</strong>
-                            to bring a pawn out of your home.
-                            Reach the center with all four pawns
-                            to win.
-                        </p>
-
-
-                        <div class="rules-grid">
-
-                            <div>
-                                <b>6</b>
-                                <span>Extra turn</span>
                             </div>
 
-                            <div>
-                                <b>●</b>
-                                <span>Capture</span>
+                        </button>
+
+                        <div
+                            id="diceTitle"
+                            class="dice-title">
+                            ROLL THE DICE
+                        </div>
+
+                        <div
+                            id="diceHint"
+                            class="dice-hint">
+                            Roll the dice to start your turn.
+                        </div>
+
+                    </section>
+
+
+                    <!-- PLAYERS -->
+                    <section class="game-card players-card">
+
+                        <div class="card-eyebrow">
+                            PLAYERS
+                        </div>
+
+                        <div
+                            id="playersList"
+                            class="players-list">
+
+                            <div
+                                class="player-row player-red"
+                                data-player-row="red">
+
+                                <span class="player-dot"></span>
+
+                                <div class="player-name">
+                                    Red
+                                </div>
+
+                                <div class="player-score">
+                                    <span class="finished-count">0</span>/4
+                                </div>
+
+                                <span class="turn-badge">
+                                    TURN
+                                </span>
+
                             </div>
 
-                            <div>
-                                <b>★</b>
-                                <span>Safe space</span>
+
+                            <div
+                                class="player-row player-green"
+                                data-player-row="green">
+
+                                <span class="player-dot"></span>
+
+                                <div class="player-name">
+                                    Green
+                                </div>
+
+                                <div class="player-score">
+                                    <span class="finished-count">0</span>/4
+                                </div>
+
+                                <span class="turn-badge">
+                                    TURN
+                                </span>
+
                             </div>
 
-                            <div>
-                                <b>🏆</b>
-                                <span>Finish 4</span>
+
+                            <div
+                                class="player-row player-yellow"
+                                data-player-row="yellow">
+
+                                <span class="player-dot"></span>
+
+                                <div class="player-name">
+                                    Yellow
+                                </div>
+
+                                <div class="player-score">
+                                    <span class="finished-count">0</span>/4
+                                </div>
+
+                                <span class="turn-badge">
+                                    TURN
+                                </span>
+
+                            </div>
+
+
+                            <div
+                                class="player-row player-blue"
+                                data-player-row="blue">
+
+                                <span class="player-dot"></span>
+
+                                <div class="player-name">
+                                    Blue
+                                </div>
+
+                                <div class="player-score">
+                                    <span class="finished-count">0</span>/4
+                                </div>
+
+                                <span class="turn-badge">
+                                    TURN
+                                </span>
+
                             </div>
 
                         </div>
 
-                    </div>
+                    </section>
 
-                </section>
-
-
-                <!-- ABOUT -->
-
-                <section class="about-card">
-
-                    <span class="eyebrow">
-                        ABOUT THE GAME
-                    </span>
-
-                    <h2>
-                        Simple. Offline. Yours.
-                    </h2>
-
-                    <p>
-                        A lightweight classic Ludo game made
-                        with plain HTML, CSS and vanilla
-                        JavaScript. No account, server or
-                        external game engine is required.
-                    </p>
-
-
-                    <div class="badges">
-
-                        <span>FOSS</span>
-                        <span>Offline</span>
-                        <span>Vanilla JS</span>
-                        <span>Open Source</span>
-
-                    </div>
-
-                </section>
+                </div>
 
             </div>
 
+
+            <!-- RIGHT INFORMATION -->
+            <aside class="side-information">
+
+                <section class="info-card">
+
+                    <div class="card-eyebrow">
+                        HOW TO PLAY
+                    </div>
+
+                    <h2>
+                        MOVE • CAPTURE • FINISH
+                    </h2>
+
+                    <p>
+                        Roll a six to bring a pawn onto the board.
+                        Move your pawns around the track, capture
+                        opponents and get all four pawns home first.
+                    </p>
+
+                </section>
+
+
+                <section class="about-card">
+
+                    <div class="card-eyebrow">
+                        ABOUT THE GAME
+                    </div>
+
+                    <h2>
+                        SIMPLE. OFFLINE. YOURS.
+                    </h2>
+
+                    <p>
+                        A lightweight classic Ludo game built with
+                        plain HTML, CSS and JavaScript. No account,
+                        server or internet connection is required.
+                    </p>
+
+                </section>
+
+            </aside>
+
         </section>
-
-
-        <!-- =====================================================
-             RIGHT SIDE
-        ====================================================== -->
-
-        <aside class="game-panel">
-
-
-            <!-- DICE -->
-
-            <section class="dice-card">
-
-                <div class="dice-header">
-
-                    <div>
-
-                        <span class="eyebrow">
-                            YOUR MOVE
-                        </span>
-
-                        <h2>
-                            Roll the Dice
-                        </h2>
-
-                    </div>
-
-                    <span
-                        id="diceStatus"
-                        class="dice-status"
-                    >
-                        Ready
-                    </span>
-
-                </div>
-
-
-                <div class="dice-area">
-
-                    <div
-                        id="dicePointer"
-                        class="dice-pointer"
-                    >
-                        <span>ROLL</span>
-                        <b>↓</b>
-                    </div>
-
-
-                    <button
-                        id="diceButton"
-                        class="dice-button"
-                        type="button"
-                        aria-label="Roll dice"
-                    >
-
-                        <div class="dice-face">
-
-                            <span class="dot dot-1"></span>
-                            <span class="dot dot-2"></span>
-                            <span class="dot dot-3"></span>
-                            <span class="dot dot-4"></span>
-                            <span class="dot dot-5"></span>
-                            <span class="dot dot-6"></span>
-                            <span class="dot dot-7"></span>
-                            <span class="dot dot-8"></span>
-                            <span class="dot dot-9"></span>
-
-                        </div>
-
-                    </button>
-
-                </div>
-
-
-                <p
-                    id="diceHint"
-                    class="dice-hint"
-                >
-                    Red's turn — roll the dice.
-                </p>
-
-            </section>
-
-
-            <!-- PLAYERS -->
-
-            <section class="players-card">
-
-                <div class="panel-heading">
-
-                    <div>
-
-                        <span class="eyebrow">
-                            PLAYERS
-                        </span>
-
-                        <h2>
-                            Game Status
-                        </h2>
-
-                    </div>
-
-                </div>
-
-
-                <div
-                    id="playersList"
-                    class="players-list"
-                >
-
-                    <div
-                        class="player-card"
-                        data-player="red"
-                    >
-
-                        <span class="player-dot red"></span>
-
-                        <div class="player-info">
-
-                            <strong>Red</strong>
-
-                            <small>
-                                4 pawns
-                            </small>
-
-                        </div>
-
-                        <span class="player-score">
-                            0/4
-                        </span>
-
-                    </div>
-
-
-                    <div
-                        class="player-card"
-                        data-player="green"
-                    >
-
-                        <span class="player-dot green"></span>
-
-                        <div class="player-info">
-
-                            <strong>Green</strong>
-
-                            <small>
-                                4 pawns
-                            </small>
-
-                        </div>
-
-                        <span class="player-score">
-                            0/4
-                        </span>
-
-                    </div>
-
-
-                    <div
-                        class="player-card"
-                        data-player="yellow"
-                    >
-
-                        <span class="player-dot yellow"></span>
-
-                        <div class="player-info">
-
-                            <strong>Yellow</strong>
-
-                            <small>
-                                4 pawns
-                            </small>
-
-                        </div>
-
-                        <span class="player-score">
-                            0/4
-                        </span>
-
-                    </div>
-
-
-                    <div
-                        class="player-card"
-                        data-player="blue"
-                    >
-
-                        <span class="player-dot blue"></span>
-
-                        <div class="player-info">
-
-                            <strong>Blue</strong>
-
-                            <small>
-                                4 pawns
-                            </small>
-
-                        </div>
-
-                        <span class="player-score">
-                            0/4
-                        </span>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-        </aside>
 
     </main>
 
 
-    <!-- =========================================================
-         FOOTER
-    ========================================================== -->
-
+    <!-- FOOTER -->
     <footer class="footer">
 
-        <div class="footer-buttons">
+        <div class="footer-actions">
 
-            <a
-                href="https://github.com/"
-                id="githubButton"
-            >
-                GitHub
-            </a>
+            <button
+                id="donateButton"
+                type="button">
+                ♥ Donate
+            </button>
 
-            <a
-                href="https://github.com/"
-                id="sourceButton"
-            >
-                Source
-            </a>
+            <button
+                id="downloadButton"
+                type="button">
+                ↓ Download
+            </button>
+
+            <button
+                id="shareButton"
+                type="button">
+                ↗ Share
+            </button>
 
         </div>
 
-
         <p>
-            Made with
-            <span class="heart">♥</span>
-            by
-            <strong>Your Name</strong>
+            Made with ♥ by Your Name
         </p>
-
 
         <small>
             © 2026 Your Name · India 🇮🇳
@@ -689,38 +437,33 @@
 </div>
 
 
-<!-- =============================================================
-     WINNER MODAL
-============================================================== -->
-
+<!-- WINNER MODAL -->
 <div
     id="winnerModal"
-    class="modal hidden"
->
+    class="modal hidden">
 
-    <div class="modal-card">
+    <div class="modal-box">
 
         <div class="winner-icon">
             🏆
         </div>
 
-        <span class="eyebrow">
-            GAME OVER
-        </span>
+        <div class="card-eyebrow">
+            GAME FINISHED
+        </div>
 
         <h2 id="winnerTitle">
             Red Wins!
         </h2>
 
-        <p id="winnerText">
-            All four pawns reached the center.
+        <p id="winnerMessage">
+            All four pawns reached home.
         </p>
 
         <button
             id="modalRestart"
-            class="restart-button"
             type="button"
-        >
+            class="modal-button">
             Play Again
         </button>
 
