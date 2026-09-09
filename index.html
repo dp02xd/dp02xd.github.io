@@ -51,7 +51,8 @@
             <span>Settings</span>
         </button>
 
-        <!-- SETTINGS MENU -->
+
+        <!-- SETTINGS -->
 
         <div
             id="settingsMenu"
@@ -63,6 +64,7 @@
                 <strong>Game Settings</strong>
                 <span>Customize your game</span>
             </div>
+
 
             <div class="setting-group">
 
@@ -90,6 +92,7 @@
 
             </div>
 
+
             <div class="setting-row">
 
                 <div>
@@ -113,7 +116,9 @@
 
             </div>
 
+
             <div class="settings-divider"></div>
+
 
             <button
                 id="restartButton"
@@ -130,192 +135,300 @@
 
 
     <!-- =========================================================
-         MAIN GAME
+         GAME AREA
     ========================================================== -->
 
     <main class="game-layout">
 
+
         <!-- =====================================================
-             BOARD
+             LEFT SIDE
         ====================================================== -->
 
-        <section class="board-section">
+        <section class="game-main">
 
-            <div class="board-frame">
+            <!-- BOARD -->
 
-                <div
-                    id="board"
-                    class="board"
-                    aria-label="Ludo game board"
-                >
+            <section class="board-section">
 
-                    <!-- TOP / GREEN HOME -->
-
-                    <div class="home-area home-green">
-
-                        <div class="home-title">GREEN</div>
-
-                        <div class="yard">
-
-                            <div
-                                class="yard-slot"
-                                data-yard="green-0"
-                            ></div>
-
-                            <div
-                                class="yard-slot"
-                                data-yard="green-1"
-                            ></div>
-
-                            <div
-                                class="yard-slot"
-                                data-yard="green-2"
-                            ></div>
-
-                            <div
-                                class="yard-slot"
-                                data-yard="green-3"
-                            ></div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- LEFT / RED HOME -->
-
-                    <div class="home-area home-red">
-
-                        <div class="home-title">RED</div>
-
-                        <div class="yard">
-
-                            <div
-                                class="yard-slot"
-                                data-yard="red-0"
-                            ></div>
-
-                            <div
-                                class="yard-slot"
-                                data-yard="red-1"
-                            ></div>
-
-                            <div
-                                class="yard-slot"
-                                data-yard="red-2"
-                            ></div>
-
-                            <div
-                                class="yard-slot"
-                                data-yard="red-3"
-                            ></div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- RIGHT / YELLOW HOME -->
-
-                    <div class="home-area home-yellow">
-
-                        <div class="home-title">YELLOW</div>
-
-                        <div class="yard">
-
-                            <div
-                                class="yard-slot"
-                                data-yard="yellow-0"
-                            ></div>
-
-                            <div
-                                class="yard-slot"
-                                data-yard="yellow-1"
-                            ></div>
-
-                            <div
-                                class="yard-slot"
-                                data-yard="yellow-2"
-                            ></div>
-
-                            <div
-                                class="yard-slot"
-                                data-yard="yellow-3"
-                            ></div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- BOTTOM / BLUE HOME -->
-
-                    <div class="home-area home-blue">
-
-                        <div class="home-title">BLUE</div>
-
-                        <div class="yard">
-
-                            <div
-                                class="yard-slot"
-                                data-yard="blue-0"
-                            ></div>
-
-                            <div
-                                class="yard-slot"
-                                data-yard="blue-1"
-                            ></div>
-
-                            <div
-                                class="yard-slot"
-                                data-yard="blue-2"
-                            ></div>
-
-                            <div
-                                class="yard-slot"
-                                data-yard="blue-3"
-                            ></div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- BOARD GRID -->
+                <div class="board-frame">
 
                     <div
-                        id="boardGrid"
-                        class="board-grid"
-                    ></div>
+                        id="board"
+                        class="board"
+                        aria-label="Ludo game board"
+                    >
 
+                        <!-- RED HOME -->
 
-                    <!-- CENTER -->
+                        <div class="home-area home-red">
 
-                    <div class="home-center">
+                            <div class="home-title">
+                                RED
+                            </div>
 
-                        <div class="center-triangle red"></div>
+                            <div class="yard">
 
-                        <div class="center-triangle green"></div>
+                                <div
+                                    class="yard-slot"
+                                    data-yard="red-0"
+                                ></div>
 
-                        <div class="center-triangle yellow"></div>
+                                <div
+                                    class="yard-slot"
+                                    data-yard="red-1"
+                                ></div>
 
-                        <div class="center-triangle blue"></div>
+                                <div
+                                    class="yard-slot"
+                                    data-yard="red-2"
+                                ></div>
 
-                        <div class="center-core">
-                            <span>🏆</span>
+                                <div
+                                    class="yard-slot"
+                                    data-yard="red-3"
+                                ></div>
+
+                            </div>
+
                         </div>
 
+
+                        <!-- GREEN HOME -->
+
+                        <div class="home-area home-green">
+
+                            <div class="home-title">
+                                GREEN
+                            </div>
+
+                            <div class="yard">
+
+                                <div
+                                    class="yard-slot"
+                                    data-yard="green-0"
+                                ></div>
+
+                                <div
+                                    class="yard-slot"
+                                    data-yard="green-1"
+                                ></div>
+
+                                <div
+                                    class="yard-slot"
+                                    data-yard="green-2"
+                                ></div>
+
+                                <div
+                                    class="yard-slot"
+                                    data-yard="green-3"
+                                ></div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- YELLOW HOME -->
+
+                        <div class="home-area home-yellow">
+
+                            <div class="home-title">
+                                YELLOW
+                            </div>
+
+                            <div class="yard">
+
+                                <div
+                                    class="yard-slot"
+                                    data-yard="yellow-0"
+                                ></div>
+
+                                <div
+                                    class="yard-slot"
+                                    data-yard="yellow-1"
+                                ></div>
+
+                                <div
+                                    class="yard-slot"
+                                    data-yard="yellow-2"
+                                ></div>
+
+                                <div
+                                    class="yard-slot"
+                                    data-yard="yellow-3"
+                                ></div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- BLUE HOME -->
+
+                        <div class="home-area home-blue">
+
+                            <div class="home-title">
+                                BLUE
+                            </div>
+
+                            <div class="yard">
+
+                                <div
+                                    class="yard-slot"
+                                    data-yard="blue-0"
+                                ></div>
+
+                                <div
+                                    class="yard-slot"
+                                    data-yard="blue-1"
+                                ></div>
+
+                                <div
+                                    class="yard-slot"
+                                    data-yard="blue-2"
+                                ></div>
+
+                                <div
+                                    class="yard-slot"
+                                    data-yard="blue-3"
+                                ></div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- BOARD GRID -->
+
+                        <div
+                            id="boardGrid"
+                            class="board-grid"
+                        ></div>
+
+
+                        <!-- CENTER -->
+
+                        <div class="home-center">
+
+                            <div class="center-triangle red"></div>
+
+                            <div class="center-triangle green"></div>
+
+                            <div class="center-triangle yellow"></div>
+
+                            <div class="center-triangle blue"></div>
+
+                            <div class="center-core">
+                                <span>🏆</span>
+                            </div>
+
+                        </div>
+
+
+                        <!-- TOKENS -->
+
+                        <div
+                            id="tokenLayer"
+                            class="token-layer"
+                        ></div>
+
                     </div>
-
-
-                    <!-- TOKENS -->
-
-                    <div
-                        id="tokenLayer"
-                        class="token-layer"
-                    ></div>
 
                 </div>
+
+            </section>
+
+
+            <!-- DESKTOP INFO BELOW BOARD -->
+
+            <div class="below-board-info">
+
+                <!-- HOW TO PLAY -->
+
+                <section class="info-card">
+
+                    <div class="info-icon">?</div>
+
+                    <div class="info-content">
+
+                        <span class="eyebrow">
+                            HOW TO PLAY
+                        </span>
+
+                        <h2>
+                            Move • Capture • Finish
+                        </h2>
+
+                        <p>
+                            Roll the dice and move one of your
+                            four pawns. Roll a
+                            <strong>6</strong>
+                            to bring a pawn out of your home.
+                            Reach the center with all four pawns
+                            to win.
+                        </p>
+
+
+                        <div class="rules-grid">
+
+                            <div>
+                                <b>6</b>
+                                <span>Extra turn</span>
+                            </div>
+
+                            <div>
+                                <b>●</b>
+                                <span>Capture</span>
+                            </div>
+
+                            <div>
+                                <b>★</b>
+                                <span>Safe space</span>
+                            </div>
+
+                            <div>
+                                <b>🏆</b>
+                                <span>Finish 4</span>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- ABOUT -->
+
+                <section class="about-card">
+
+                    <span class="eyebrow">
+                        ABOUT THE GAME
+                    </span>
+
+                    <h2>
+                        Simple. Offline. Yours.
+                    </h2>
+
+                    <p>
+                        A lightweight classic Ludo game made
+                        with plain HTML, CSS and vanilla
+                        JavaScript. No account, server or
+                        external game engine is required.
+                    </p>
+
+
+                    <div class="badges">
+
+                        <span>FOSS</span>
+                        <span>Offline</span>
+                        <span>Vanilla JS</span>
+                        <span>Open Source</span>
+
+                    </div>
+
+                </section>
 
             </div>
 
@@ -323,15 +436,13 @@
 
 
         <!-- =====================================================
-             RIGHT GAME PANEL
+             RIGHT SIDE
         ====================================================== -->
 
         <aside class="game-panel">
 
 
-            <!-- =================================================
-                 DICE
-            ================================================== -->
+            <!-- DICE -->
 
             <section class="dice-card">
 
@@ -343,7 +454,9 @@
                             YOUR MOVE
                         </span>
 
-                        <h2>Roll the Dice</h2>
+                        <h2>
+                            Roll the Dice
+                        </h2>
 
                     </div>
 
@@ -398,15 +511,13 @@
                     id="diceHint"
                     class="dice-hint"
                 >
-                    Roll the dice to start your turn.
+                    Red's turn — roll the dice.
                 </p>
 
             </section>
 
 
-            <!-- =================================================
-                 PLAYER STATUS
-            ================================================== -->
+            <!-- PLAYERS -->
 
             <section class="players-card">
 
@@ -418,7 +529,9 @@
                             PLAYERS
                         </span>
 
-                        <h2>Game Status</h2>
+                        <h2>
+                            Game Status
+                        </h2>
 
                     </div>
 
@@ -438,8 +551,13 @@
                         <span class="player-dot red"></span>
 
                         <div class="player-info">
+
                             <strong>Red</strong>
-                            <small>4 pawns</small>
+
+                            <small>
+                                4 pawns
+                            </small>
+
                         </div>
 
                         <span class="player-score">
@@ -457,8 +575,13 @@
                         <span class="player-dot green"></span>
 
                         <div class="player-info">
+
                             <strong>Green</strong>
-                            <small>4 pawns</small>
+
+                            <small>
+                                4 pawns
+                            </small>
+
                         </div>
 
                         <span class="player-score">
@@ -476,8 +599,13 @@
                         <span class="player-dot yellow"></span>
 
                         <div class="player-info">
+
                             <strong>Yellow</strong>
-                            <small>4 pawns</small>
+
+                            <small>
+                                4 pawns
+                            </small>
+
                         </div>
 
                         <span class="player-score">
@@ -495,8 +623,13 @@
                         <span class="player-dot blue"></span>
 
                         <div class="player-info">
+
                             <strong>Blue</strong>
-                            <small>4 pawns</small>
+
+                            <small>
+                                4 pawns
+                            </small>
+
                         </div>
 
                         <span class="player-score">
@@ -504,94 +637,6 @@
                         </span>
 
                     </div>
-
-                </div>
-
-            </section>
-
-
-            <!-- =================================================
-                 HOW TO PLAY
-            ================================================== -->
-
-            <section class="info-card">
-
-                <div class="info-icon">?</div>
-
-                <div class="info-content">
-
-                    <span class="eyebrow">
-                        HOW TO PLAY
-                    </span>
-
-                    <h2>
-                        Move • Capture • Finish
-                    </h2>
-
-                    <p>
-                        Roll the dice and move one of your four
-                        pawns. Roll a <strong>6</strong> to bring
-                        a pawn out of your home. Reach the center
-                        with all four pawns to win.
-                    </p>
-
-
-                    <div class="rules-grid">
-
-                        <div>
-                            <b>6</b>
-                            <span>Extra turn</span>
-                        </div>
-
-                        <div>
-                            <b>●</b>
-                            <span>Capture</span>
-                        </div>
-
-                        <div>
-                            <b>★</b>
-                            <span>Safe space</span>
-                        </div>
-
-                        <div>
-                            <b>🏆</b>
-                            <span>Finish 4</span>
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-
-            <!-- =================================================
-                 ABOUT
-            ================================================== -->
-
-            <section class="about-card">
-
-                <span class="eyebrow">
-                    ABOUT THE GAME
-                </span>
-
-                <h2>
-                    Simple. Offline. Yours.
-                </h2>
-
-                <p>
-                    A lightweight classic Ludo game made with
-                    plain HTML, CSS and vanilla JavaScript.
-                    No account, server or external game engine
-                    is required.
-                </p>
-
-                <div class="badges">
-
-                    <span>FOSS</span>
-                    <span>Offline</span>
-                    <span>Vanilla JS</span>
-                    <span>Open Source</span>
 
                 </div>
 
@@ -611,27 +656,21 @@
         <div class="footer-buttons">
 
             <a
-                href="#"
+                href="https://github.com/"
                 id="githubButton"
             >
                 GitHub
             </a>
 
             <a
-                href="#"
+                href="https://github.com/"
                 id="sourceButton"
             >
                 Source
             </a>
 
-            <button
-                id="footerNewGame"
-                type="button"
-            >
-                New Game
-            </button>
-
         </div>
+
 
         <p>
             Made with
@@ -639,6 +678,7 @@
             by
             <strong>Your Name</strong>
         </p>
+
 
         <small>
             © 2026 Your Name · India 🇮🇳
@@ -673,7 +713,7 @@
         </h2>
 
         <p id="winnerText">
-            All four pawns reached home.
+            All four pawns reached the center.
         </p>
 
         <button
