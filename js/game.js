@@ -1,16 +1,36 @@
 "use strict";
 
+/* ============================================================
+   LUDO GAME
+   Classic offline implementation
+============================================================ */
 
-/* =========================================================
-   PLAYER CONFIGURATION
-========================================================= */
+
+/* ============================================================
+   PLAYER DEFINITIONS
+============================================================ */
+
+/*
+    IMPORTANT:
+
+    Starts have been moved one square forward:
+
+    Red    0 -> 1
+    Green 13 -> 14
+    Yellow26 -> 27
+    Blue  39 -> 40
+
+    These positions also correctly line up with the corresponding
+    colored home lanes.
+*/
 
 const PLAYERS = {
 
     red: {
         name: "Red",
-        start: 1,
         color: "#ef4444",
+
+        start: 1,
 
         lane: [
             [7, 1],
@@ -21,9 +41,12 @@ const PLAYERS = {
         ],
 
         /*
-         * Exact centers of the four white circles.
-         * The home area occupies 6x6 cells.
-         */
+            Coordinates are CENTER positions in a 15x15 board.
+
+            The white yard circles are positioned at:
+            1.5 / 4.5 on their respective axes.
+        */
+
         yard: [
             [1.5, 1.5],
             [1.5, 4.5],
@@ -32,11 +55,11 @@ const PLAYERS = {
         ]
     },
 
-
     green: {
         name: "Green",
-        start: 14,
         color: "#22c55e",
+
+        start: 14,
 
         lane: [
             [1, 7],
@@ -54,11 +77,11 @@ const PLAYERS = {
         ]
     },
 
-
     yellow: {
         name: "Yellow",
-        start: 27,
         color: "#facc15",
+
+        start: 27,
 
         lane: [
             [7, 13],
@@ -76,11 +99,11 @@ const PLAYERS = {
         ]
     },
 
-
     blue: {
         name: "Blue",
-        start: 40,
         color: "#3b82f6",
+
+        start: 40,
 
         lane: [
             [13, 7],
@@ -100,7 +123,6 @@ const PLAYERS = {
 
 };
 
-
 const PLAYER_ORDER = [
     "red",
     "green",
@@ -109,9 +131,9 @@ const PLAYER_ORDER = [
 ];
 
 
-/* =========================================================
+/* ============================================================
    MAIN TRACK
-========================================================= */
+============================================================ */
 
 const TRACK = [
 
@@ -181,11 +203,10 @@ const TRACK = [
 ];
 
 
-/*
- * Safe/star cells.
- *
- * The colored START cell is separate from these.
- */
+/* ============================================================
+   SAFE CELLS
+============================================================ */
+
 const SAFE_CELLS = new Set([
     0,
     8,
@@ -198,59 +219,9 @@ const SAFE_CELLS = new Set([
 ]);
 
 
-/* =========================================================
-   DOM
-========================================================= */
-
-const board = document.getElementById("board");
-const boardGrid = document.getElementById("boardGrid");
-const tokenLayer = document.getElementById("tokenLayer");
-
-const diceCard = document.getElementById("diceCard");
-const diceButton = document.getElementById("diceButton");
-const diceFace = document.getElementById("diceFace");
-const diceTitle = document.getElementById("diceTitle");
-const diceHint = document.getElementById("diceHint");
-
-const playersList = document.getElementById("playersList");
-
-const settingsButton = document.getElementById("settingsButton");
-const settingsMenu = document.getElementById("settingsMenu");
-
-const boardThemeToggle =
-    document.getElementById("boardThemeToggle");
-
-const boardThemeHint =
-    document.getElementById("boardThemeHint");
-
-const restartButton =
-    document.getElementById("restartButton");
-
-const winnerModal =
-    document.getElementById("winnerModal");
-
-const winnerTitle =
-    document.getElementById("winnerTitle");
-
-const winnerMessage =
-    document.getElementById("winnerMessage");
-
-const modalRestart =
-    document.getElementById("modalRestart");
-
-const donateButton =
-    document.getElementById("donateButton");
-
-const downloadButton =
-    document.getElementById("downloadButton");
-
-const shareButton =
-    document.getElementById("shareButton");
-
-
-/* =========================================================
-   GAME STATE
-========================================================= */
+/* ============================================================
+   STATE
+============================================================ */
 
 const state = {
 
@@ -264,25 +235,75 @@ const state = {
 
     winner: null,
 
-    /*
-     * -1 = yard
-     * 0..51 = main track
-     * 52..56 = colored home lane
-     * 57 = finished
-     */
     tokens: {
+
         red: [-1, -1, -1, -1],
+
         green: [-1, -1, -1, -1],
+
         yellow: [-1, -1, -1, -1],
+
         blue: [-1, -1, -1, -1]
+
     }
 
 };
 
 
-/* =========================================================
+/* ============================================================
+   DOM
+============================================================ */
+
+const board = document.getElementById("board");
+const boardGrid = document.getElementById("boardGrid");
+const tokenLayer = document.getElementById("tokenLayer");
+
+const diceButton = document.getElementById("diceButton");
+const diceFace = document.getElementById("diceFace");
+const diceStatus = document.getElementById("diceStatus");
+const diceHint = document.getElementById("diceHint");
+const dicePointer = document.getElementById("dicePointer");
+const diceArea = document.getElementById("diceArea");
+
+const playersList = document.getElementById("playersList");
+
+const settingsButton = document.getElementById("settingsButton");
+const settingsMenu = document.getElementById("settingsMenu");
+const closeSettings = document.getElementById("closeSettings");
+
+const boardThemeOption = document.getElementById("boardThemeOption");
+const boardThemeToggle = document.getElementById("boardThemeToggle");
+
+const restartGameButton = document.getElementById("restartGame");
+
+const winnerModal = document.getElementById("winnerModal");
+const winnerTitle = document.getElementById("winnerTitle");
+const winnerText = document.getElementById("winnerText");
+const winnerRestart = document.getElementById("winnerRestart");
+
+const themeButtons =
+    document.querySelectorAll("[data-theme-option]");
+
+const donateButton =
+    document.getElementById("donateButton");
+
+const downloadButton =
+    document.getElementById("downloadButton");
+
+const shareButton =
+    document.getElementById("shareButton");
+
+
+/* ============================================================
+   TOKEN DOM CACHE
+============================================================ */
+
+const tokenElements = {};
+
+
+/* ============================================================
    HELPERS
-========================================================= */
+============================================================ */
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -294,225 +315,42 @@ function currentPlayerKey() {
 }
 
 
-function getTrackCoordinate(index) {
-    return TRACK[index];
+function currentPlayer() {
+    return PLAYERS[currentPlayerKey()];
 }
 
 
-function getGlobalTrackIndex(player, progress) {
-
-    return (
-        PLAYERS[player].start + progress
-    ) % TRACK.length;
-
-}
-
-
-function isFinished(progress) {
-    return progress === 57;
-}
-
-
-function isInMainTrack(progress) {
-    return progress >= 0 && progress <= 51;
-}
-
-
-function canMoveToken(player, tokenIndex) {
-
-    const progress =
-        state.tokens[player][tokenIndex];
-
-    const dice =
-        state.dice;
-
-    if (dice < 1) {
-        return false;
-    }
-
-    if (progress === 57) {
-        return false;
-    }
-
-    /*
-     * Pawn in yard can only enter with six.
-     */
-    if (progress === -1) {
-        return dice === 6;
-    }
-
-    /*
-     * Exact roll required to finish.
-     */
-    return progress + dice <= 57;
-}
-
-
-function getMovableTokens(player) {
-
-    const result = [];
-
-    for (let i = 0; i < 4; i++) {
-
-        if (canMoveToken(player, i)) {
-            result.push(i);
-        }
-
-    }
-
-    return result;
-}
-
-
-/* =========================================================
-   BOARD CREATION
-========================================================= */
-
-const trackMap = new Map();
-
-TRACK.forEach((position, index) => {
-
-    const key =
-        `${position[0]}-${position[1]}`;
-
-    trackMap.set(key, index);
-
-});
-
-
-function laneOwner(row, col) {
-
-    for (const player of PLAYER_ORDER) {
-
-        const lane =
-            PLAYERS[player].lane;
-
-        for (const cell of lane) {
-
-            if (
-                cell[0] === row &&
-                cell[1] === col
-            ) {
-                return player;
-            }
-
-        }
-
-    }
-
-    return null;
-}
-
-
-function startOwner(row, col) {
-
-    for (const player of PLAYER_ORDER) {
-
-        const start =
-            PLAYERS[player].start;
-
-        const position =
-            TRACK[start];
-
-        if (
-            position[0] === row &&
-            position[1] === col
-        ) {
-            return player;
-        }
-
-    }
-
-    return null;
-}
-
-
-function createArrow(player, row, col) {
-
-    /*
-     * Arrow indicates the direction toward
-     * the colored home lane.
-     */
-
-    const arrows = {
-
-        red: {
-            row: 7,
-            col: 0,
-            symbol: "→"
-        },
-
-        green: {
-            row: 0,
-            col: 7,
-            symbol: "↓"
-        },
-
-        yellow: {
-            row: 7,
-            col: 14,
-            symbol: "←"
-        },
-
-        blue: {
-            row: 14,
-            col: 7,
-            symbol: "↑"
-        }
-
-    };
-
-    const item = arrows[player];
-
-    if (
-        item &&
-        item.row === row &&
-        item.col === col
-    ) {
-
-        const span =
-            document.createElement("span");
-
-        span.className =
-            `lane-arrow ${player}`;
-
-        span.textContent =
-            item.symbol;
-
-        return span;
-
-    }
-
-    return null;
-}
-
+/* ============================================================
+   BUILD BOARD
+============================================================ */
 
 function buildBoard() {
 
     boardGrid.innerHTML = "";
 
+    const trackMap = new Map();
+
+    TRACK.forEach((position, index) => {
+
+        const key = `${position[0]},${position[1]}`;
+
+        trackMap.set(key, index);
+
+    });
+
+
     for (let row = 0; row < 15; row++) {
 
         for (let col = 0; col < 15; col++) {
 
-            const cell =
-                document.createElement("div");
+            const cell = document.createElement("div");
 
-            cell.className =
-                "board-cell";
+            cell.className = "board-cell";
 
-            const key =
-                `${row}-${col}`;
+            const key = `${row},${col}`;
 
-            const trackIndex =
-                trackMap.get(key);
+            const trackIndex = trackMap.get(key);
 
-            const lane =
-                laneOwner(row, col);
-
-            /*
-             * Main track
-             */
             if (trackIndex !== undefined) {
 
                 cell.classList.add("track");
@@ -521,16 +359,36 @@ function buildBoard() {
 
                     cell.classList.add("safe");
 
+                    const star =
+                        document.createElement("span");
+
+                    star.className = "cell-star";
+                    star.textContent = "★";
+
+                    cell.appendChild(star);
                 }
 
-                const owner =
-                    startOwner(row, col);
 
-                if (owner) {
-
-                    cell.classList.add(
-                        `start-${owner}`
+                const startOwner =
+                    PLAYER_ORDER.find(
+                        player =>
+                            PLAYERS[player].start === trackIndex
                     );
+
+
+                if (startOwner) {
+
+                    cell.classList.add("start");
+
+                    cell.style.setProperty(
+                        "--player-color",
+                        PLAYERS[startOwner].color
+                    );
+
+                    /*
+                        Start box is intentionally separate from
+                        the normal safe-star system.
+                    */
 
                 }
 
@@ -538,37 +396,64 @@ function buildBoard() {
 
 
             /*
-             * Colored home lanes
-             */
-            if (lane) {
+                Colored home lanes.
+            */
+
+            if (
+                row === 7 &&
+                col >= 1 &&
+                col <= 5
+            ) {
 
                 cell.classList.add(
                     "lane",
-                    `lane-${lane}`
+                    "lane-red"
                 );
 
             }
 
 
-            /*
-             * Entry arrow
-             */
-            for (const player of PLAYER_ORDER) {
+            if (
+                col === 7 &&
+                row >= 1 &&
+                row <= 5
+            ) {
 
-                const arrow =
-                    createArrow(
-                        player,
-                        row,
-                        col
-                    );
-
-                if (arrow) {
-
-                    cell.appendChild(arrow);
-
-                }
+                cell.classList.add(
+                    "lane",
+                    "lane-green"
+                );
 
             }
+
+
+            if (
+                row === 7 &&
+                col >= 9 &&
+                col <= 13
+            ) {
+
+                cell.classList.add(
+                    "lane",
+                    "lane-yellow"
+                );
+
+            }
+
+
+            if (
+                col === 7 &&
+                row >= 9 &&
+                row <= 13
+            ) {
+
+                cell.classList.add(
+                    "lane",
+                    "lane-blue"
+                );
+
+            }
+
 
             boardGrid.appendChild(cell);
 
@@ -576,81 +461,120 @@ function buildBoard() {
 
     }
 
+
+    /*
+        Home exit arrows.
+    */
+
+    addExitArrow("exit-red", "→");
+    addExitArrow("exit-green", "→");
+    addExitArrow("exit-yellow", "→");
+    addExitArrow("exit-blue", "→");
+
 }
 
 
-/* =========================================================
-   TOKEN POSITIONING
-========================================================= */
+function addExitArrow(className, symbol) {
 
-const tokenElements = new Map();
+    const existing =
+        board.querySelector(`.${className}`);
+
+    if (existing) {
+        existing.remove();
+    }
+
+    const arrow =
+        document.createElement("div");
+
+    arrow.className =
+        `home-exit-arrow ${className}`;
+
+    arrow.textContent = symbol;
+
+    board.appendChild(arrow);
+
+}
 
 
-function getTokenPosition(
-    player,
-    progress,
-    tokenIndex
-) {
+/* ============================================================
+   TOKEN COORDINATES
+============================================================ */
+
+/*
+    Progress:
+
+    -1      = yard
+     0-51   = main track
+     52-56  = colored home lane
+     57     = finished / center
+*/
+
+function getTokenCoordinates(playerKey, progress, tokenIndex) {
+
+    const player = PLAYERS[playerKey];
+
 
     /*
-     * Yard
-     */
+        Yard
+    */
+
     if (progress === -1) {
 
-        const position =
-            PLAYERS[player].yard[tokenIndex];
+        const point =
+            player.yard[tokenIndex];
 
         return {
-            row: position[0],
-            col: position[1]
+            row: point[0],
+            col: point[1]
         };
 
     }
 
 
     /*
-     * Main track
-     */
+        Main track
+    */
+
     if (progress >= 0 && progress <= 51) {
 
-        const position =
-            getTrackCoordinate(
-                getGlobalTrackIndex(
-                    player,
-                    progress
-                )
-            );
+        const trackIndex =
+            (player.start + progress) % 52;
+
+        const point =
+            TRACK[trackIndex];
 
         return {
-            row: position[0] + 0.5,
-            col: position[1] + 0.5
+            row: point[0] + 0.5,
+            col: point[1] + 0.5
         };
 
     }
 
 
     /*
-     * Colored home lane
-     */
+        Colored home lane
+    */
+
     if (progress >= 52 && progress <= 56) {
 
         const laneIndex =
             progress - 52;
 
-        const position =
-            PLAYERS[player].lane[laneIndex];
+        const point =
+            player.lane[laneIndex];
 
         return {
-            row: position[0] + 0.5,
-            col: position[1] + 0.5
+            row: point[0] + 0.5,
+            col: point[1] + 0.5
         };
 
     }
 
 
     /*
-     * Finished
-     */
+        Finished token.
+    */
+
     return {
         row: 7.5,
         col: 7.5
@@ -659,25 +583,29 @@ function getTokenPosition(
 }
 
 
-function setTokenPosition(
-    element,
-    position
+/* ============================================================
+   TOKEN POSITION
+============================================================ */
+
+function applyTokenPosition(
+    token,
+    coordinates
 ) {
 
-    /*
-     * Convert board-cell coordinates
-     * into percentage coordinates.
-     */
-    element.style.left =
-        `${(position.col / 15) * 100}%`;
+    token.style.left =
+        `${(coordinates.col / 15) * 100}%`;
 
-    element.style.top =
-        `${(position.row / 15) * 100}%`;
+    token.style.top =
+        `${(coordinates.row / 15) * 100}%`;
 
 }
 
 
-function createToken(player, tokenIndex) {
+/* ============================================================
+   CREATE TOKEN
+============================================================ */
+
+function createToken(playerKey, tokenIndex) {
 
     const token =
         document.createElement("button");
@@ -685,23 +613,22 @@ function createToken(player, tokenIndex) {
     token.type = "button";
 
     token.className =
-        `token ${player}`;
+        `token ${playerKey}`;
 
     token.dataset.player =
-        player;
+        playerKey;
 
     token.dataset.token =
         tokenIndex;
 
     token.setAttribute(
         "aria-label",
-        `${PLAYERS[player].name} pawn ${tokenIndex + 1}`
+        `${PLAYERS[playerKey].name} pawn ${tokenIndex + 1}`
     );
 
-    tokenElements.set(
-        `${player}-${tokenIndex}`,
-        token
-    );
+    tokenElements[
+        `${playerKey}-${tokenIndex}`
+    ] = token;
 
     tokenLayer.appendChild(token);
 
@@ -710,203 +637,628 @@ function createToken(player, tokenIndex) {
 }
 
 
-function renderTokens() {
+/* ============================================================
+   RENDER TOKENS
+============================================================ */
 
-    const movable =
-        getMovableTokens(
-            currentPlayerKey()
+function renderTokens(
+    jumpingKey = null
+) {
+
+    PLAYER_ORDER.forEach(playerKey => {
+
+        state.tokens[playerKey].forEach(
+            (progress, tokenIndex) => {
+
+                const key =
+                    `${playerKey}-${tokenIndex}`;
+
+                let token =
+                    tokenElements[key];
+
+
+                if (!token) {
+
+                    token =
+                        createToken(
+                            playerKey,
+                            tokenIndex
+                        );
+
+                }
+
+
+                const coordinates =
+                    getTokenCoordinates(
+                        playerKey,
+                        progress,
+                        tokenIndex
+                    );
+
+
+                applyTokenPosition(
+                    token,
+                    coordinates
+                );
+
+
+                const movable =
+                    playerKey === currentPlayerKey() &&
+                    state.dice > 0 &&
+                    !state.rolling &&
+                    !state.moving &&
+                    canMoveToken(
+                        playerKey,
+                        tokenIndex,
+                        state.dice
+                    );
+
+
+                token.classList.toggle(
+                    "movable",
+                    movable
+                );
+
+
+                if (
+                    jumpingKey === key
+                ) {
+
+                    /*
+                        Restart jump animation each step.
+                    */
+
+                    token.classList.remove(
+                        "jumping"
+                    );
+
+                    void token.offsetWidth;
+
+                    token.classList.add(
+                        "jumping"
+                    );
+
+                }
+
+            }
         );
 
-    for (const player of PLAYER_ORDER) {
+    });
 
-        for (let i = 0; i < 4; i++) {
+}
 
-            const key =
-                `${player}-${i}`;
 
-            let token =
-                tokenElements.get(key);
+/* ============================================================
+   PLAYER UI
+============================================================ */
 
-            if (!token) {
-                token =
-                    createToken(
-                        player,
-                        i
-                    );
+function renderPlayers() {
+
+    playersList.innerHTML = "";
+
+    PLAYER_ORDER.forEach(playerKey => {
+
+        const player =
+            PLAYERS[playerKey];
+
+        const progressList =
+            state.tokens[playerKey];
+
+        const finished =
+            progressList.filter(
+                value => value === 57
+            ).length;
+
+        const active =
+            playerKey === currentPlayerKey();
+
+
+        const card =
+            document.createElement("div");
+
+        card.className =
+            "player-card";
+
+        if (active) {
+            card.classList.add("active");
+        }
+
+        card.style.setProperty(
+            "--player-color",
+            player.color
+        );
+
+
+        const color =
+            document.createElement("span");
+
+        color.className =
+            "player-color";
+
+
+        const info =
+            document.createElement("div");
+
+        const name =
+            document.createElement("div");
+
+        name.className =
+            "player-name";
+
+        name.textContent =
+            player.name;
+
+
+        const progress =
+            document.createElement("div");
+
+        progress.className =
+            "player-progress";
+
+        progress.textContent =
+            `${finished}/4 finished`;
+
+
+        info.appendChild(name);
+        info.appendChild(progress);
+
+
+        const badge =
+            document.createElement("span");
+
+        badge.className =
+            "player-badge";
+
+        if (active) {
+
+            badge.textContent =
+                "TURN";
+
+        } else {
+
+            badge.textContent =
+                finished;
+
+            badge.classList.add(
+                "finished"
+            );
+
+        }
+
+
+        card.appendChild(color);
+        card.appendChild(info);
+        card.appendChild(badge);
+
+        playersList.appendChild(card);
+
+    });
+
+}
+
+
+/* ============================================================
+   CAN MOVE
+============================================================ */
+
+function canMoveToken(
+    playerKey,
+    tokenIndex,
+    dice
+) {
+
+    const progress =
+        state.tokens[playerKey][tokenIndex];
+
+
+    /*
+        Finished token cannot move.
+    */
+
+    if (progress === 57) {
+        return false;
+    }
+
+
+    /*
+        Yard requires a six.
+    */
+
+    if (progress === -1) {
+        return dice === 6;
+    }
+
+
+    /*
+        Exact finish required.
+    */
+
+    return progress + dice <= 57;
+
+}
+
+
+/* ============================================================
+   LEGAL MOVES
+============================================================ */
+
+function getLegalTokens(
+    playerKey,
+    dice
+) {
+
+    const legal = [];
+
+    state.tokens[playerKey].forEach(
+        (_, index) => {
+
+            if (
+                canMoveToken(
+                    playerKey,
+                    index,
+                    dice
+                )
+            ) {
+
+                legal.push(index);
+
             }
 
-            const progress =
-                state.tokens[player][i];
+        }
+    );
 
-            const position =
-                getTokenPosition(
-                    player,
-                    progress,
-                    i
-                );
+    return legal;
 
-            setTokenPosition(
-                token,
-                position
+}
+
+
+/* ============================================================
+   GLOBAL TRACK POSITION
+============================================================ */
+
+function getGlobalTrackIndex(
+    playerKey,
+    progress
+) {
+
+    if (
+        progress < 0 ||
+        progress > 51
+    ) {
+        return null;
+    }
+
+    return (
+        PLAYERS[playerKey].start +
+        progress
+    ) % 52;
+
+}
+
+
+/* ============================================================
+   CAPTURE
+============================================================ */
+
+function captureOpponents(
+    playerKey,
+    progress
+) {
+
+    if (
+        progress < 0 ||
+        progress > 51
+    ) {
+
+        return false;
+
+    }
+
+
+    const globalIndex =
+        getGlobalTrackIndex(
+            playerKey,
+            progress
+        );
+
+
+    /*
+        Safe cells cannot be captured.
+    */
+
+    if (
+        SAFE_CELLS.has(globalIndex)
+    ) {
+
+        return false;
+
+    }
+
+
+    let captured = false;
+
+
+    PLAYER_ORDER.forEach(
+        opponentKey => {
+
+            if (
+                opponentKey === playerKey
+            ) {
+                return;
+            }
+
+
+            state.tokens[
+                opponentKey
+            ].forEach(
+                (opponentProgress, index) => {
+
+                    if (
+                        opponentProgress >= 0 &&
+                        opponentProgress <= 51
+                    ) {
+
+                        const opponentGlobal =
+                            getGlobalTrackIndex(
+                                opponentKey,
+                                opponentProgress
+                            );
+
+
+                        if (
+                            opponentGlobal ===
+                            globalIndex
+                        ) {
+
+                            state.tokens[
+                                opponentKey
+                            ][index] = -1;
+
+                            captured = true;
+
+                        }
+
+                    }
+
+                }
             );
+
+        }
+    );
+
+
+    return captured;
+
+}
+
+
+/* ============================================================
+   MOVE TOKEN
+============================================================ */
+
+async function moveToken(
+    playerKey,
+    tokenIndex
+) {
+
+    if (
+        state.moving ||
+        state.rolling ||
+        state.winner
+    ) {
+        return;
+    }
+
+
+    if (
+        playerKey !== currentPlayerKey()
+    ) {
+        return;
+    }
+
+
+    const dice =
+        state.dice;
+
+
+    if (
+        dice < 1 ||
+        !canMoveToken(
+            playerKey,
+            tokenIndex,
+            dice
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    state.moving = true;
+
+    dicePointer.classList.add(
+        "hidden"
+    );
+
+
+    const oldProgress =
+        state.tokens[playerKey][tokenIndex];
+
+
+    let newProgress;
+
+
+    /*
+        Pawn leaving yard.
+    */
+
+    if (oldProgress === -1) {
+
+        newProgress = 0;
+
+    } else {
+
+        newProgress =
+            oldProgress + dice;
+
+    }
+
+
+    /*
+        Move one square at a time.
+
+        This creates the visible jump to each
+        next box rather than teleporting.
+    */
+
+    if (oldProgress === -1) {
+
+        state.tokens[
+            playerKey
+        ][tokenIndex] = 0;
+
+
+        renderTokens(
+            `${playerKey}-${tokenIndex}`
+        );
+
+        await sleep(300);
+
+    } else {
+
+        for (
+            let step = oldProgress + 1;
+            step <= newProgress;
+            step++
+        ) {
+
+            state.tokens[
+                playerKey
+            ][tokenIndex] = step;
+
+
+            renderTokens(
+                `${playerKey}-${tokenIndex}`
+            );
+
 
             /*
-             * Only current player's legal pawns
-             * can be selected.
-             */
-            const isMovable =
-                player === currentPlayerKey() &&
-                movable.includes(i) &&
-                !state.moving &&
-                !state.rolling;
+                Wait long enough for the jump to
+                be visible before moving to the next
+                cell.
+            */
 
-            token.classList.toggle(
-                "movable",
-                isMovable
+            await sleep(145);
+
+        }
+
+    }
+
+
+    /*
+        Capture after landing.
+    */
+
+    const captured =
+        captureOpponents(
+            playerKey,
+            newProgress
+        );
+
+
+    renderTokens();
+
+
+    /*
+        Check winner.
+    */
+
+    const won =
+        state.tokens[playerKey]
+            .every(
+                value => value === 57
             );
 
-            token.disabled =
-                !isMovable;
 
-        }
+    if (won) {
+
+        state.winner =
+            playerKey;
+
+        state.dice = 0;
+
+        state.moving = false;
+
+        updateInterface();
+
+        showWinner(
+            playerKey
+        );
+
+        return;
 
     }
+
+
+    /*
+        Six OR capture = extra turn.
+    */
+
+    const extraTurn =
+        dice === 6 ||
+        captured;
+
+
+    state.dice = 0;
+
+    state.moving = false;
+
+
+    if (extraTurn) {
+
+        setDiceMessage(
+            captured
+                ? `${PLAYERS[playerKey].name} captured a pawn!`
+                : `${PLAYERS[playerKey].name} rolled a 6!`,
+            "Roll again."
+        );
+
+    } else {
+
+        nextPlayer();
+
+    }
+
+
+    updateInterface();
 
 }
 
 
-/* =========================================================
-   TURN UI
-========================================================= */
+/* ============================================================
+   NEXT PLAYER
+============================================================ */
 
-function updatePlayerUI() {
+function nextPlayer() {
 
-    const activePlayer =
-        currentPlayerKey();
+    state.currentPlayer =
+        (
+            state.currentPlayer + 1
+        ) % PLAYER_ORDER.length;
 
-    document
-        .querySelectorAll("[data-player-row]")
-        .forEach(row => {
+    state.dice = 0;
 
-            const player =
-                row.dataset.playerRow;
-
-            row.classList.toggle(
-                "active",
-                player === activePlayer
-            );
-
-            const finished =
-                state.tokens[player]
-                    .filter(isFinished)
-                    .length;
-
-            const count =
-                row.querySelector(
-                    ".finished-count"
-                );
-
-            if (count) {
-                count.textContent =
-                    finished;
-            }
-
-        });
+    renderTokens();
 
 }
 
 
-function updateDiceUI() {
+/* ============================================================
+   DICE FACE
+============================================================ */
 
-    const player =
-        currentPlayerKey();
-
-    diceCard.classList.toggle(
-        "awaiting-roll",
-        state.dice === 0 &&
-        !state.rolling &&
-        !state.moving &&
-        !state.winner
-    );
-
-    diceCard.classList.toggle(
-        "rolling",
-        state.rolling
-    );
-
-
-    if (state.rolling) {
-
-        diceTitle.textContent =
-            "ROLLING…";
-
-        diceHint.textContent =
-            `${PLAYERS[player].name} is rolling`;
-
-    }
-
-    else if (state.moving) {
-
-        diceTitle.textContent =
-            "MOVING…";
-
-        diceHint.textContent =
-            "Pawn is moving";
-
-    }
-
-    else if (state.dice > 0) {
-
-        const movable =
-            getMovableTokens(player);
-
-        if (movable.length > 0) {
-
-            diceTitle.textContent =
-                "CHOOSE A PAWN";
-
-            diceHint.textContent =
-                "Tap a glowing pawn to move it.";
-
-        }
-
-        else {
-
-            diceTitle.textContent =
-                "NO MOVE";
-
-            diceHint.textContent =
-                "No pawn can move with this roll.";
-
-        }
-
-    }
-
-    else {
-
-        diceTitle.textContent =
-            "ROLL THE DICE";
-
-        diceHint.textContent =
-            `${PLAYERS[player].name}'s turn — roll the dice.`;
-
-    }
-
-
-    diceButton.disabled =
-        state.rolling ||
-        state.moving ||
-        state.dice !== 0 ||
-        Boolean(state.winner);
-
-}
-
-
-/* =========================================================
-   DICE
-========================================================= */
-
-const DOT_POSITIONS = {
+const DICE_POSITIONS = {
 
     1: [5],
 
@@ -925,387 +1277,333 @@ const DOT_POSITIONS = {
 
 function setDiceFace(value) {
 
-    diceFace
-        .querySelectorAll(".dot")
-        .forEach((dot, index) => {
+    const positions =
+        DICE_POSITIONS[value] || [];
+
+    const dots =
+        diceFace.querySelectorAll(
+            ".dice-dot"
+        );
+
+
+    dots.forEach(
+        (dot, index) => {
 
             dot.classList.toggle(
                 "show",
-                DOT_POSITIONS[value]
-                    .includes(index + 1)
+                positions.includes(index + 1)
             );
 
-        });
+        }
+    );
 
 }
 
+
+/* ============================================================
+   ROLL DICE
+============================================================ */
 
 async function rollDice() {
 
     if (
         state.rolling ||
         state.moving ||
-        state.dice !== 0 ||
-        state.winner
+        state.winner ||
+        state.dice !== 0
     ) {
+
         return;
+
     }
+
 
     state.rolling = true;
 
-    updateDiceUI();
+    dicePointer.classList.add(
+        "hidden"
+    );
+
+    diceButton.classList.add(
+        "rolling"
+    );
+
+    diceButton.disabled = true;
+
 
     /*
-     * Dice rolling animation.
-     */
-    for (let i = 0; i < 9; i++) {
+        Dice animation.
+    */
 
-        const temporary =
-            1 + Math.floor(
+    for (
+        let i = 0;
+        i < 9;
+        i++
+    ) {
+
+        const random =
+            Math.floor(
                 Math.random() * 6
-            );
+            ) + 1;
 
-        setDiceFace(temporary);
+        setDiceFace(random);
 
-        await sleep(70);
+        await sleep(65);
 
     }
 
+
     const result =
-        1 + Math.floor(
+        Math.floor(
             Math.random() * 6
-        );
+        ) + 1;
 
-    state.dice =
-        result;
 
-    state.rolling =
-        false;
+    state.dice = result;
+
+    state.rolling = false;
+
+    diceButton.classList.remove(
+        "rolling"
+    );
+
 
     setDiceFace(result);
 
-    updateDiceUI();
-    renderTokens();
 
-
-    const player =
-        currentPlayerKey();
-
-    const movable =
-        getMovableTokens(player);
-
-    /*
-     * No legal move.
-     */
-    if (movable.length === 0) {
-
-        await sleep(750);
-
-        /*
-         * A six still gives another turn.
-         */
-        const extraTurn =
-            result === 6;
-
-        state.dice = 0;
-
-        if (!extraTurn) {
-
-            nextPlayer();
-
-        }
-
-        updateDiceUI();
-        updatePlayerUI();
-        renderTokens();
-
-        return;
-
-    }
-
-}
-
-
-/* =========================================================
-   CAPTURE
-========================================================= */
-
-function captureOpponents(
-    movingPlayer,
-    progress
-) {
-
-    if (
-        progress < 0 ||
-        progress > 51
-    ) {
-        return false;
-    }
-
-    const globalIndex =
-        getGlobalTrackIndex(
-            movingPlayer,
-            progress
+    const legal =
+        getLegalTokens(
+            currentPlayerKey(),
+            result
         );
 
-    /*
-     * Safe cells cannot capture.
-     */
-    if (SAFE_CELLS.has(globalIndex)) {
-        return false;
-    }
 
-    let captured =
-        false;
+    if (legal.length === 0) {
 
-    for (const opponent of PLAYER_ORDER) {
+        /*
+            No pawn can move.
+        */
 
-        if (opponent === movingPlayer) {
-            continue;
-        }
+        setDiceMessage(
+            `${currentPlayer().name} rolled ${result}.`,
+            "No legal move."
+        );
 
-        for (let i = 0; i < 4; i++) {
 
-            const opponentProgress =
-                state.tokens[opponent][i];
+        renderTokens();
 
-            if (
-                opponentProgress >= 0 &&
-                opponentProgress <= 51
-            ) {
 
-                const opponentGlobal =
-                    getGlobalTrackIndex(
-                        opponent,
-                        opponentProgress
-                    );
+        /*
+            A six still gives another turn.
+        */
 
-                if (
-                    opponentGlobal === globalIndex
-                ) {
+        setTimeout(
+            () => {
 
-                    state.tokens[opponent][i] =
-                        -1;
+                if (state.winner) {
+                    return;
+                }
 
-                    captured =
-                        true;
+
+                if (result === 6) {
+
+                    state.dice = 0;
+
+                    updateInterface();
+
+                } else {
+
+                    nextPlayer();
+
+                    updateInterface();
 
                 }
 
-            }
-
-        }
-
-    }
-
-    return captured;
-
-}
-
-
-/* =========================================================
-   MOVE TOKEN
-========================================================= */
-
-async function moveToken(tokenIndex) {
-
-    if (
-        state.moving ||
-        state.rolling ||
-        state.dice === 0 ||
-        state.winner
-    ) {
-        return;
-    }
-
-    const player =
-        currentPlayerKey();
-
-    if (
-        !canMoveToken(
-            player,
-            tokenIndex
-        )
-    ) {
-        return;
-    }
-
-    state.moving =
-        true;
-
-    const roll =
-        state.dice;
-
-    let progress =
-        state.tokens[player][tokenIndex];
-
-    /*
-     * Yard -> start cell.
-     */
-    if (progress === -1) {
-
-        state.tokens[player][tokenIndex] =
-            0;
-
-        renderTokens();
-
-        const token =
-            tokenElements.get(
-                `${player}-${tokenIndex}`
-            );
-
-        if (token) {
-
-            token.classList.add(
-                "jumping"
-            );
-
-            setTimeout(() => {
-                token.classList.remove(
-                    "jumping"
-                );
-            }, 300);
-
-        }
-
-        await sleep(320);
-
-    }
-
-    else {
-
-        /*
-         * Move one cell at a time.
-         */
-        for (
-            let step = 1;
-            step <= roll;
-            step++
-        ) {
-
-            progress++;
-
-            state.tokens[player][tokenIndex] =
-                progress;
-
-            renderTokens();
-
-            const token =
-                tokenElements.get(
-                    `${player}-${tokenIndex}`
-                );
-
-            if (token) {
-
-                /*
-                 * Restart jump animation.
-                 */
-                token.classList.remove(
-                    "jumping"
-                );
-
-                void token.offsetWidth;
-
-                token.classList.add(
-                    "jumping"
-                );
-
-            }
-
-            await sleep(260);
-
-        }
-
-    }
-
-
-    /*
-     * Capture after reaching destination.
-     */
-    const finalProgress =
-        state.tokens[player][tokenIndex];
-
-    const captured =
-        captureOpponents(
-            player,
-            finalProgress
+            },
+            850
         );
 
-    renderTokens();
-
-
-    /*
-     * Check winner.
-     */
-    const finishedCount =
-        state.tokens[player]
-            .filter(isFinished)
-            .length;
-
-    if (finishedCount === 4) {
-
-        state.winner =
-            player;
-
-        state.dice =
-            0;
-
-        state.moving =
-            false;
-
-        updatePlayerUI();
-        updateDiceUI();
-        renderTokens();
-
-        showWinner(player);
 
         return;
 
     }
 
 
-    /*
-     * Six or capture = another turn.
-     */
-    const extraTurn =
-        roll === 6 ||
-        captured;
+    setDiceMessage(
+        `${currentPlayer().name} rolled ${result}.`,
+        legal.length === 1
+            ? "Choose the glowing pawn."
+            : "Choose a glowing pawn."
+    );
 
-    state.dice =
-        0;
 
-    state.moving =
-        false;
-
-    if (!extraTurn) {
-
-        nextPlayer();
-
-    }
-
-    updatePlayerUI();
-    updateDiceUI();
     renderTokens();
+
+    updateInterface();
 
 }
 
 
-/* =========================================================
+/* ============================================================
+   DICE MESSAGE
+============================================================ */
+
+function setDiceMessage(
+    status,
+    hint
+) {
+
+    diceStatus.textContent =
+        status;
+
+    diceHint.textContent =
+        hint;
+
+}
+
+
+/* ============================================================
+   INTERFACE
+============================================================ */
+
+function updateInterface() {
+
+    const player =
+        currentPlayer();
+
+
+    /*
+        Player cards.
+    */
+
+    renderPlayers();
+
+
+    /*
+        Dice state.
+    */
+
+    if (state.winner) {
+
+        diceStatus.textContent =
+            `${PLAYERS[state.winner].name} wins!`;
+
+        diceHint.textContent =
+            "Start a new game to play again.";
+
+        diceButton.disabled = true;
+
+        dicePointer.classList.add(
+            "hidden"
+        );
+
+        return;
+
+    }
+
+
+    if (state.moving) {
+
+        diceStatus.textContent =
+            "Moving pawn…";
+
+        diceHint.textContent =
+            "Watch the pawn jump to each square.";
+
+        diceButton.disabled = true;
+
+        dicePointer.classList.add(
+            "hidden"
+        );
+
+        return;
+
+    }
+
+
+    if (state.rolling) {
+
+        diceStatus.textContent =
+            "Rolling…";
+
+        diceHint.textContent =
+            "Good luck!";
+
+        diceButton.disabled = true;
+
+        dicePointer.classList.add(
+            "hidden"
+        );
+
+        return;
+
+    }
+
+
+    if (state.dice > 0) {
+
+        diceStatus.textContent =
+            `${player.name} rolled ${state.dice}.`;
+
+        diceHint.textContent =
+            "Choose a glowing pawn.";
+
+        diceButton.disabled = true;
+
+        dicePointer.classList.add(
+            "hidden"
+        );
+
+        return;
+
+    }
+
+
+    diceStatus.textContent =
+        `${player.name}'s turn`;
+
+    diceHint.textContent =
+        "Roll the dice to start your turn.";
+
+    diceButton.disabled = false;
+
+    dicePointer.classList.remove(
+        "hidden"
+    );
+
+
+    /*
+        Color the dice status according to player.
+    */
+
+    diceArea.style.setProperty(
+        "--player-color",
+        player.color
+    );
+
+}
+
+
+/* ============================================================
    TOKEN CLICK HANDLER
-========================================================= */
+============================================================ */
 
 tokenLayer.addEventListener(
     "click",
     event => {
 
         const token =
-            event.target.closest(".token");
+            event.target.closest(
+                ".token"
+            );
+
 
         if (!token) {
             return;
         }
 
-        const player =
+
+        const playerKey =
             token.dataset.player;
 
         const tokenIndex =
@@ -1313,38 +1611,63 @@ tokenLayer.addEventListener(
                 token.dataset.token
             );
 
-        /*
-         * Only active player's pawn.
-         */
+
         if (
-            player !== currentPlayerKey()
+            playerKey !==
+            currentPlayerKey()
         ) {
+
             return;
+
         }
 
-        moveToken(tokenIndex);
+
+        if (
+            state.dice <= 0 ||
+            state.moving ||
+            state.rolling
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            !canMoveToken(
+                playerKey,
+                tokenIndex,
+                state.dice
+            )
+        ) {
+
+            return;
+
+        }
+
+
+        moveToken(
+            playerKey,
+            tokenIndex
+        );
 
     }
 );
 
 
-/* =========================================================
-   TURN
-========================================================= */
+/* ============================================================
+   DICE CLICK
+============================================================ */
 
-function nextPlayer() {
-
-    state.currentPlayer =
-        (
-            state.currentPlayer + 1
-        ) % PLAYER_ORDER.length;
-
-}
+diceButton.addEventListener(
+    "click",
+    rollDice
+);
 
 
-/* =========================================================
+/* ============================================================
    NEW GAME
-========================================================= */
+============================================================ */
 
 function newGame() {
 
@@ -1358,38 +1681,52 @@ function newGame() {
 
     state.winner = null;
 
-    for (const player of PLAYER_ORDER) {
 
-        state.tokens[player] =
-            [-1, -1, -1, -1];
+    PLAYER_ORDER.forEach(
+        playerKey => {
 
-    }
+            state.tokens[playerKey] =
+                [-1, -1, -1, -1];
+
+        }
+    );
+
 
     hideWinner();
 
     setDiceFace(1);
 
-    updatePlayerUI();
-    updateDiceUI();
     renderTokens();
+
+    updateInterface();
 
 }
 
 
-/* =========================================================
+/* ============================================================
    WINNER
-========================================================= */
+============================================================ */
 
-function showWinner(player) {
+function showWinner(playerKey) {
+
+    const player =
+        PLAYERS[playerKey];
+
 
     winnerTitle.textContent =
-        `${PLAYERS[player].name} Wins!`;
+        `${player.name} Wins!`;
 
-    winnerMessage.textContent =
-        "All four pawns reached home. Congratulations!";
+    winnerText.textContent =
+        "All four pawns reached the center.";
+
 
     winnerModal.classList.remove(
         "hidden"
+    );
+
+    winnerModal.setAttribute(
+        "aria-hidden",
+        "false"
     );
 
 }
@@ -1401,65 +1738,88 @@ function hideWinner() {
         "hidden"
     );
 
+    winnerModal.setAttribute(
+        "aria-hidden",
+        "true"
+    );
+
 }
 
 
-/* =========================================================
+/* ============================================================
    SETTINGS
-========================================================= */
+============================================================ */
 
-function loadSettings() {
+function openSettings() {
 
-    const theme =
-        localStorage.getItem(
-            "ludo-theme"
-        ) || "midnight";
+    settingsMenu.hidden = false;
 
-    let boardFollow =
-        localStorage.getItem(
-            "ludo-board-theme"
-        );
-
-    if (boardFollow === null) {
-        boardFollow = "false";
-    }
-
-    applyTheme(theme);
-
-    /*
-     * Board follows theme is only meaningful
-     * on Midnight.
-     */
-    if (theme === "light") {
-
-        boardThemeToggle.checked =
-            false;
-
-        boardThemeToggle.disabled =
-            true;
-
-        document.body.dataset.boardFollow =
-            "false";
-
-    }
-
-    else {
-
-        boardThemeToggle.disabled =
-            false;
-
-        boardThemeToggle.checked =
-            boardFollow === "true";
-
-        document.body.dataset.boardFollow =
-            boardFollow;
-
-    }
-
-    updateThemeButtons();
+    settingsButton.setAttribute(
+        "aria-expanded",
+        "true"
+    );
 
 }
 
+
+function closeSettingsMenu() {
+
+    settingsMenu.hidden = true;
+
+    settingsButton.setAttribute(
+        "aria-expanded",
+        "false"
+    );
+
+}
+
+
+settingsButton.addEventListener(
+    "click",
+    event => {
+
+        event.stopPropagation();
+
+        if (settingsMenu.hidden) {
+
+            openSettings();
+
+        } else {
+
+            closeSettingsMenu();
+
+        }
+
+    }
+);
+
+
+closeSettings.addEventListener(
+    "click",
+    closeSettingsMenu
+);
+
+
+document.addEventListener(
+    "click",
+    event => {
+
+        if (
+            !settingsMenu.contains(event.target) &&
+            !settingsButton.contains(event.target)
+        ) {
+
+            closeSettingsMenu();
+
+        }
+
+    }
+);
+
+
+/* ============================================================
+   THEME
+============================================================ */
 
 function applyTheme(theme) {
 
@@ -1467,108 +1827,138 @@ function applyTheme(theme) {
         theme !== "light" &&
         theme !== "midnight"
     ) {
+
         theme = "midnight";
+
     }
+
 
     document.body.dataset.theme =
         theme;
+
 
     localStorage.setItem(
         "ludo-theme",
         theme
     );
 
-    /*
-     * Light theme cannot use board-follow.
-     */
-    if (theme === "light") {
 
-        boardThemeToggle.checked =
+    themeButtons.forEach(
+        button => {
+
+            button.classList.toggle(
+                "active",
+                button.dataset.themeOption ===
+                theme
+            );
+
+        }
+    );
+
+
+    /*
+        The board-follow toggle is ONLY available
+        in Midnight mode.
+    */
+
+    if (theme === "midnight") {
+
+        boardThemeOption.classList.remove(
+            "disabled"
+        );
+
+        boardThemeToggle.disabled =
             false;
+
+    } else {
+
+        boardThemeOption.classList.add(
+            "disabled"
+        );
 
         boardThemeToggle.disabled =
             true;
 
+        /*
+            White theme always uses the classic board.
+        */
+
+        boardThemeToggle.checked =
+            false;
+
         document.body.dataset.boardFollow =
             "false";
 
-        boardThemeHint.textContent =
-            "Disabled in Light theme";
+        localStorage.setItem(
+            "ludo-board-theme",
+            "false"
+        );
 
     }
 
-    else {
 
-        boardThemeToggle.disabled =
-            false;
+    /*
+        If switching back to Midnight,
+        restore the saved board-follow choice.
+    */
 
-        boardThemeHint.textContent =
-            "Use Midnight colors on the board";
+    if (theme === "midnight") {
+
+        const saved =
+            localStorage.getItem(
+                "ludo-board-theme"
+            );
+
+        const enabled =
+            saved === "true";
+
+        boardThemeToggle.checked =
+            enabled;
 
         document.body.dataset.boardFollow =
-            boardThemeToggle.checked
+            enabled
                 ? "true"
                 : "false";
 
     }
 
-    updateThemeButtons();
-
 }
 
 
-function updateThemeButtons() {
-
-    const current =
-        document.body.dataset.theme;
-
-    document
-        .querySelectorAll(
-            "[data-theme-choice]"
-        )
-        .forEach(button => {
-
-            button.classList.toggle(
-                "active",
-                button.dataset.themeChoice === current
-            );
-
-        });
-
-}
-
-
-/* Theme buttons */
-
-document
-    .querySelectorAll(
-        "[data-theme-choice]"
-    )
-    .forEach(button => {
+themeButtons.forEach(
+    button => {
 
         button.addEventListener(
             "click",
             () => {
 
                 applyTheme(
-                    button.dataset.themeChoice
+                    button.dataset.themeOption
                 );
 
             }
         );
 
-    });
+    }
+);
 
 
-/* Board theme toggle */
+/* ============================================================
+   BOARD THEME TOGGLE
+============================================================ */
 
 boardThemeToggle.addEventListener(
     "change",
     () => {
 
+        /*
+            Safety check:
+            this option should only work in Midnight.
+        */
+
         if (
-            document.body.dataset.theme ===
-            "light"
+            document.body.dataset.theme !==
+            "midnight"
         ) {
 
             boardThemeToggle.checked =
@@ -1578,140 +1968,131 @@ boardThemeToggle.addEventListener(
 
         }
 
-        const value =
+
+        const enabled =
             boardThemeToggle.checked;
 
+
         document.body.dataset.boardFollow =
-            value
+            enabled
                 ? "true"
                 : "false";
 
+
         localStorage.setItem(
             "ludo-board-theme",
-            String(value)
+            String(enabled)
         );
 
     }
 );
 
 
-/* =========================================================
-   SETTINGS MENU
-========================================================= */
+/* ============================================================
+   RESTART
+============================================================ */
 
-settingsButton.addEventListener(
-    "click",
-    event => {
-
-        event.stopPropagation();
-
-        const open =
-            settingsMenu.classList.toggle(
-                "open"
-            );
-
-        settingsButton.setAttribute(
-            "aria-expanded",
-            String(open)
-        );
-
-    }
-);
-
-
-settingsMenu.addEventListener(
-    "click",
-    event => {
-
-        event.stopPropagation();
-
-    }
-);
-
-
-document.addEventListener(
-    "click",
-    () => {
-
-        settingsMenu.classList.remove(
-            "open"
-        );
-
-        settingsButton.setAttribute(
-            "aria-expanded",
-            "false"
-        );
-
-    }
-);
-
-
-/* =========================================================
-   BUTTONS
-========================================================= */
-
-diceButton.addEventListener(
-    "click",
-    rollDice
-);
-
-
-restartButton.addEventListener(
+restartGameButton.addEventListener(
     "click",
     () => {
 
         newGame();
 
-        settingsMenu.classList.remove(
-            "open"
-        );
+        closeSettingsMenu();
 
     }
 );
 
 
-modalRestart.addEventListener(
+winnerRestart.addEventListener(
     "click",
     newGame
 );
 
 
-/* =========================================================
-   FOOTER
-========================================================= */
+/* ============================================================
+   FOOTER - DONATE
+============================================================ */
 
 donateButton.addEventListener(
     "click",
     () => {
 
         /*
-         * Replace this with your donation URL.
-         */
+            Replace this with your real donation URL.
+
+            Example:
+            window.open(
+                "https://your-donation-link.example",
+                "_blank",
+                "noopener"
+            );
+        */
+
         alert(
-            "Add your donation link here."
+            "Add your donation link in js/game.js."
         );
 
     }
 );
 
+
+/* ============================================================
+   FOOTER - DOWNLOAD
+============================================================ */
 
 downloadButton.addEventListener(
     "click",
     () => {
 
         /*
-         * Basic download of the current page.
-         *
-         * Replace with your GitHub release/download
-         * URL if you publish a packaged version.
-         */
-        alert(
-            "Add your download link here."
-        );
+            Downloads the current game page.
+
+            For a GitHub Pages project, you can later
+            replace this with a ZIP/release link.
+        */
+
+        const html =
+            "<!DOCTYPE html>\n" +
+            document.documentElement.outerHTML;
+
+
+        const blob =
+            new Blob(
+                [html],
+                {
+                    type: "text/html"
+                }
+            );
+
+
+        const url =
+            URL.createObjectURL(blob);
+
+
+        const link =
+            document.createElement("a");
+
+        link.href = url;
+
+        link.download =
+            "ludo.html";
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        link.remove();
+
+        URL.revokeObjectURL(url);
 
     }
 );
 
+
+/* ============================================================
+   FOOTER - SHARE
+============================================================ */
 
 shareButton.addEventListener(
     "click",
@@ -1729,6 +2110,7 @@ shareButton.addEventListener(
 
         };
 
+
         try {
 
             if (
@@ -1739,30 +2121,26 @@ shareButton.addEventListener(
                     shareData
                 );
 
-            }
-
-            else {
-
-                await navigator.clipboard.writeText(
-                    window.location.href
-                );
-
-                alert(
-                    "Game link copied!"
-                );
+                return;
 
             }
 
-        }
 
-        catch (error) {
+            await navigator.clipboard.writeText(
+                window.location.href
+            );
+
+
+            alert(
+                "Game link copied to clipboard!"
+            );
+
+        } catch (error) {
 
             /*
-             * User cancelled sharing.
-             */
-            console.log(
-                "Share cancelled."
-            );
+                User cancelled sharing or clipboard
+                isn't available.
+            */
 
         }
 
@@ -1770,14 +2148,72 @@ shareButton.addEventListener(
 );
 
 
-/* =========================================================
-   INITIALIZE
-========================================================= */
+/* ============================================================
+   LOCAL STORAGE INITIALIZATION
+============================================================ */
 
-buildBoard();
+function loadSettings() {
 
-loadSettings();
+    const savedTheme =
+        localStorage.getItem(
+            "ludo-theme"
+        ) || "midnight";
 
-setDiceFace(1);
 
-newGame();
+    applyTheme(
+        savedTheme
+    );
+
+
+    /*
+        Make sure the board setting is correctly
+        restored when starting directly in Midnight.
+    */
+
+    if (
+        savedTheme === "midnight"
+    ) {
+
+        const boardSetting =
+            localStorage.getItem(
+                "ludo-board-theme"
+            );
+
+
+        const enabled =
+            boardSetting === "true";
+
+
+        boardThemeToggle.checked =
+            enabled;
+
+        document.body.dataset.boardFollow =
+            enabled
+                ? "true"
+                : "false";
+
+    }
+
+}
+
+
+/* ============================================================
+   INITIALIZATION
+============================================================ */
+
+function init() {
+
+    buildBoard();
+
+    loadSettings();
+
+    setDiceFace(1);
+
+    renderTokens();
+
+    updateInterface();
+
+}
+
+
+init();
